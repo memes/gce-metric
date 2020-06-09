@@ -1,0 +1,27 @@
+---
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.23.0
+    hooks:
+      - id: yamllint
+        files: \.(yml|yaml)$
+        types: [file, yaml]
+        entry: yamllint --strict
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.1.0
+    hooks:
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-xml
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: pretty-format-json
+        args: [--autofix]
+      - id: sort-simple-yaml
+      - id: trailing-whitespace
+  - repo: https://github.com/thoughtworks/talisman
+    rev: v1.2.0
+    hooks:
+      - id: talisman-commit
