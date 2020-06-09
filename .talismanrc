@@ -1,0 +1,5 @@
+fileignoreconfig:
+  # False positive; the 'password' in docker-push-release.yml is not the actual
+  # password
+  - filename: .github/workflows/docker-push-release.yml
+    checksum: 99127776b7c200f174521128ebce2f9290cd29a85248c2b066671b07e62e9b4a
