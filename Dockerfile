@@ -4,8 +4,9 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -o gce-metric
 
 FROM alpine:3.12.0
-ARG COMMIT_SHA="uncommitted"
-ARG TAG_NAME="untagged"
+# Default to 'master' so that a build outside of CI process has valid links
+ARG COMMIT_SHA="master"
+ARG TAG_NAME="unreleased"
 LABEL maintainer="Matthew Emes <memes@matthewemes.com>" \
       org.opencontainers.image.title="gce-metric" \
       org.opencontainers.image.authors="memes@matthewemes.com" \
