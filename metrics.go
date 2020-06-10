@@ -73,6 +73,13 @@ func ProjectID(projectID string) func(*metricConfig) error {
 	}
 }
 
+func Round(round bool) func(*metricConfig) error {
+	return func(m *metricConfig) error {
+		m.round = round
+		return nil
+	}
+}
+
 func IntegerMetric(round bool) func(*metricConfig) error {
 	return func(m *metricConfig) error {
 		m.round = round
