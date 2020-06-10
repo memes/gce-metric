@@ -19,6 +19,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: memes/gce-metric
           tag_with_ref: true
+          tags: latest
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           build_args: COMMIT_SHA=${{ github.sha }},TAG_NAME=${{ github.event.release.tag_name }}
   binary-release:
