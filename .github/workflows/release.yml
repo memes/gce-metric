@@ -39,7 +39,7 @@ jobs:
           CGO_ENABLE: 0
           # yamllint disable-line rule:truthy
           GO111MODULE: on
-        run: go build -o gce-matrix-${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}
+        run: go build -o gce-metric-${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}
       - name: "Upload release binaries"
         uses: actions/upload-release-asset@v1
         env:
