@@ -144,7 +144,7 @@ func main() {
 					"value", value,
 				)
 				if err = sendMetric(ctx, requestGenerator(value)); err != nil {
-					logger.Error("Error sending metric to GCP",
+					logger.Errorw("Error sending metric to GCP",
 						"err", err,
 					)
 				}
