@@ -114,7 +114,7 @@ func main() {
 	go func(ctx context.Context) {
 		logger.Debug("Output handler started")
 		delta := ceiling - floor
-		metricConfig, err := NewMetricConfig(DefaultMetricConfig(), MetricType(metricType), ProjectID(projectID))
+		metricConfig, err := NewMetricConfig(DefaultMetricConfig(), Round(round), MetricType(metricType), ProjectID(projectID))
 		if err != nil {
 			logger.Errorw("Error configuring metrics client",
 				"err", err,
@@ -144,7 +144,7 @@ func main() {
 					"value", value,
 				)
 				if err = sendMetric(ctx, requestGenerator(value)); err != nil {
-					logger.Error("Error sending metric to GCP",
+					logger.Errorw("Error sending metric to GCP",
 						"err", err,
 					)
 				}
