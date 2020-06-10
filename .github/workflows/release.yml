@@ -1,0 +1,51 @@
+---
+# yamllint disable rule:line-length
+name: release
+
+# yamllint disable-line rule:truthy
+on:
+  release:
+    types: [published]
+
+jobs:
+  docker-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1.1.0
+        with:
+          username: ${{ secrets.DOCKER_NAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: memes/gce-metric
+          tag_with_ref: true
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          build_args: COMMIT_SHA=${{ github.sha }},TAG_NAME=${{ github.event.release.tag_name }}
+  binary-release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: ["linux", "darwin", "windows"]
+        arch: ["amd64"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.14'
+      - name: Build for ${{ matrix.os }} ${{ matrix.arch }}
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLE: 0
+          # yamllint disable-line rule:truthy
+          GO111MODULE: on
+        run: go build -o gce-matrix-${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}
+      - name: "Upload release binaries"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./gce-metric-${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}
+          asset_name: gce-metric-${{ github.event.release.tag_name }}-${{ matrix.os }}-${{ matrix.arch }}
+          asset_content_type: application/octet-stream
