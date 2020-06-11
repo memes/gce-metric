@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"math"
 	"os"
 	"os/signal"
@@ -15,29 +16,40 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const (
+	MinimumSampleDuration = 10 * time.Second
+)
+
 func main() {
 	var (
-		verbose     bool
-		sample      time.Duration
-		period      time.Duration
-		floor       float64
-		ceiling     float64
-		round       bool
-		metricType  string
-		projectID   string
-		ticker      *time.Ticker
-		output      chan float64
-		rootFlagSet *flag.FlagSet
+		verbose          bool
+		sample           time.Duration
+		period           time.Duration
+		floor            float64
+		ceiling          float64
+		round            bool
+		metricType       string
+		projectID        string
+		ticker           *time.Ticker
+		output           chan float64
+		rootFlagSet      *flag.FlagSet
+		generatorFlagSet *flag.FlagSet
+		deleteFlagSet    *flag.FlagSet
 	)
 	rootFlagSet = flag.NewFlagSet("gce-metric", flag.ExitOnError)
 	rootFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
-	rootFlagSet.DurationVar(&sample, "sample", 60*time.Second, "sample time, specified in Go duration format. Default value is 60s")
-	rootFlagSet.DurationVar(&period, "period", 10*time.Minute, "the period of the underlying wave function; e.g. the time for a complete cycle from floor to ceiling and back.")
-	rootFlagSet.Float64Var(&floor, "floor", 1.0, "the lowest value to send to metric; e.g. '1.0'")
-	rootFlagSet.Float64Var(&ceiling, "ceiling", 10.0, "the maximum value to send to metics; e.g. '10.0'")
-	rootFlagSet.BoolVar(&round, "round", false, "Round metric value to nearest integer")
-	rootFlagSet.StringVar(&metricType, "type", "custom.googleapis.com/gce_metric", "The custom metric type to use; e.g. custom.googleapis.com/gce_metric")
-	rootFlagSet.StringVar(&projectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
+	generatorFlagSet = flag.NewFlagSet("generator", flag.ExitOnError)
+	generatorFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
+	generatorFlagSet.DurationVar(&sample, "sample", 60*time.Second, "sample time, specified in Go duration format. Default value is 60s")
+	generatorFlagSet.DurationVar(&period, "period", 10*time.Minute, "the period of the underlying wave function; e.g. the time for a complete cycle from floor to ceiling and back.")
+	generatorFlagSet.Float64Var(&floor, "floor", 1.0, "the lowest value to send to metric; e.g. '1.0'")
+	generatorFlagSet.Float64Var(&ceiling, "ceiling", 10.0, "the maximum value to send to metics; e.g. '10.0'")
+	generatorFlagSet.BoolVar(&round, "round", false, "Round metric value to nearest integer")
+	generatorFlagSet.StringVar(&metricType, "type", "custom.googleapis.com/gce_metric", "The custom metric type to use; e.g. custom.googleapis.com/gce_metric")
+	generatorFlagSet.StringVar(&projectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
+	deleteFlagSet = flag.NewFlagSet("delete", flag.ExitOnError)
+	deleteFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
+	deleteFlagSet.StringVar(&projectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
 	logger, level := initLogger()
 	defer func() {
 		_ = logger.Sync()
@@ -45,8 +57,9 @@ func main() {
 	logger.Debug("Starting application")
 	sawtooth := &ffcli.Command{
 		Name:       "sawtooth",
-		ShortUsage: "gce-metric [flags] sawtooth",
+		ShortUsage: "gce-metric sawtooth [flags]",
 		ShortHelp:  "generate metrics that match a sawtooth wave function",
+		FlagSet:    generatorFlagSet,
 		Exec: func(ctx context.Context, _ []string) error {
 			generator := NewSawtoothGenerator(logger, period)
 			return generator(ctx, ticker, output)
@@ -54,8 +67,9 @@ func main() {
 	}
 	sine := &ffcli.Command{
 		Name:       "sine",
-		ShortUsage: "gce-metric [flags] sine",
+		ShortUsage: "gce-metric sine [flags]",
 		ShortHelp:  "generate metrics that match a sine wave function",
+		FlagSet:    generatorFlagSet,
 		Exec: func(ctx context.Context, _ []string) error {
 			generator := NewSineGenerator(logger, period)
 			return generator(ctx, ticker, output)
@@ -63,8 +77,9 @@ func main() {
 	}
 	square := &ffcli.Command{
 		Name:       "square",
-		ShortUsage: "gce-metric [flags] square",
+		ShortUsage: "gce-metric square [flags]",
 		ShortHelp:  "generate metrics that match a square wave function",
+		FlagSet:    generatorFlagSet,
 		Exec: func(ctx context.Context, _ []string) error {
 			generator := NewSquareGenerator(logger, period)
 			return generator(ctx, ticker, output)
@@ -72,16 +87,40 @@ func main() {
 	}
 	triangle := &ffcli.Command{
 		Name:       "triangle",
-		ShortUsage: "gce-metric [flags] triangle",
+		ShortUsage: "gce-metric triangle [flags]",
 		ShortHelp:  "generate metrics that match a triangle wave function",
+		FlagSet:    generatorFlagSet,
 		Exec: func(ctx context.Context, _ []string) error {
 			generator := NewTriangleGenerator(logger, period)
 			return generator(ctx, ticker, output)
 		},
 	}
+	delete := &ffcli.Command{
+		Name:       "delete",
+		ShortUsage: "gce-metric delete [flags] type",
+		ShortHelp:  "delete a custom metric timeseries",
+		FlagSet:    deleteFlagSet,
+		Exec: func(ctx context.Context, metricTypes []string) error {
+			if len(metricTypes) < 1 {
+				return fmt.Errorf("one or more custom metric types must be provided to delete")
+			}
+			metricConfig, err := NewMetricConfig(DefaultMetricConfig(), ProjectID(projectID))
+			if err != nil {
+				return err
+			}
+			logger.Debugw("Trying to delete metrics",
+				"projectID", metricConfig.projectID,
+				"metricTypes", metricTypes,
+			)
+			if err := deleteMetrics(ctx, metricConfig.projectID, metricTypes); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
 	root := &ffcli.Command{
-		ShortUsage:  "gce-metric [flags] <subcommand>",
-		Subcommands: []*ffcli.Command{sawtooth, sine, square, triangle},
+		ShortUsage:  "gce-metric <subcommand> [flags]",
+		Subcommands: []*ffcli.Command{sawtooth, sine, square, triangle, delete},
 		FlagSet:     rootFlagSet,
 		Exec: func(context.Context, []string) error {
 			return flag.ErrHelp
@@ -93,6 +132,11 @@ func main() {
 		)
 		os.Exit(1)
 	}
+	if sample < MinimumSampleDuration {
+		logger.Fatalf("Sample value must be %v or greater", MinimumSampleDuration)
+		os.Exit(1)
+	}
+
 	if verbose {
 		level.SetLevel(zapcore.DebugLevel)
 	}

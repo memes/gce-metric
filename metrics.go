@@ -27,13 +27,13 @@ type metricConfig struct {
 
 func (m *metricConfig) Validate() error {
 	if len(strings.TrimSpace(m.projectID)) < 1 {
-		return fmt.Errorf("Project ID must be provided")
+		return fmt.Errorf("project ID must be provided")
 	}
 	if len(strings.TrimSpace(m.metricType)) < 1 {
-		return fmt.Errorf("MetricType must be provided")
+		return fmt.Errorf("metricType must be provided")
 	}
 	if len(strings.TrimSpace(m.resourceType)) < 1 {
-		return fmt.Errorf("ResourceType must be provided")
+		return fmt.Errorf("resourceType must be provided")
 	}
 	return nil
 }
@@ -74,13 +74,6 @@ func ProjectID(projectID string) func(*metricConfig) error {
 }
 
 func Round(round bool) func(*metricConfig) error {
-	return func(m *metricConfig) error {
-		m.round = round
-		return nil
-	}
-}
-
-func IntegerMetric(round bool) func(*metricConfig) error {
 	return func(m *metricConfig) error {
 		m.round = round
 		return nil
@@ -172,7 +165,12 @@ func doubleMetricAdapter(logger *zap.SugaredLogger, value float64) *monitoringpb
 
 func NewCreateTimeSeriesRequestGenerator(logger *zap.SugaredLogger, metricConfig metricConfig) func(float64) *monitoringpb.CreateTimeSeriesRequest {
 	requestLogger := logger.With(
-		"metricConfig", metricConfig,
+		"projectID", metricConfig.projectID,
+		"round", metricConfig.round,
+		"metricType", metricConfig.metricType,
+		"metricLabels", metricConfig.metricLabels,
+		"resourceType", metricConfig.resourceLabels,
+		"resourceLabels", metricConfig.resourceLabels,
 	)
 	requestLogger.Debug("Building new CreateTimeSeriesRequest generator")
 	var metricValueAdapter func(*zap.SugaredLogger, float64) *monitoringpb.TypedValue
@@ -221,4 +219,20 @@ func sendMetric(ctx context.Context, request *monitoringpb.CreateTimeSeriesReque
 		return err
 	}
 	return client.CreateTimeSeries(ctx, request)
+}
+
+func deleteMetrics(ctx context.Context, projectID string, typeNames []string) error {
+	client, err := monitoring.NewMetricClient(ctx)
+	if err != nil {
+		return err
+	}
+	for _, typeName := range typeNames {
+		request := &monitoringpb.DeleteMetricDescriptorRequest{
+			Name: "projects/" + projectID + "/metricDescriptors/" + typeName,
+		}
+		if err := client.DeleteMetricDescriptor(ctx, request); err != nil {
+			return err
+		}
+	}
+	return nil
 }
