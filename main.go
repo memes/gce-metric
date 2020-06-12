@@ -20,6 +20,7 @@ import (
 	"github.com/peterbourgon/ff/v3/ffcli"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/api/iterator"
 	metricpb "google.golang.org/genproto/googleapis/api/metric"
 	monitoredrespb "google.golang.org/genproto/googleapis/api/monitoredres"
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
@@ -53,6 +54,8 @@ func main() {
 		metricLabelsArgs   string
 		resourceLabelsArgs string
 		deleteFlagSet      *flag.FlagSet
+		listFlagSet        *flag.FlagSet
+		filter             string
 	)
 	logger, level := initLogger()
 	defer func() {
@@ -75,6 +78,10 @@ func main() {
 	deleteFlagSet = flag.NewFlagSet("delete", flag.ExitOnError)
 	deleteFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
 	deleteFlagSet.StringVar(&overrideProjectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
+	listFlagSet = flag.NewFlagSet("delete", flag.ExitOnError)
+	listFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
+	listFlagSet.StringVar(&overrideProjectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
+	listFlagSet.StringVar(&filter, "filter", "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")
 	sawtooth := &ffcli.Command{
 		Name:       "sawtooth",
 		ShortUsage: "gce-metric sawtooth [flags] type",
@@ -143,9 +150,21 @@ func main() {
 			return deleteMetrics(ctx, logger, metricTypes, projectID)
 		},
 	}
+	list := &ffcli.Command{
+		Name:       "list",
+		ShortUsage: "gce-metric list [flags]",
+		ShortHelp:  "list custom metric timeseries",
+		FlagSet:    listFlagSet,
+		Exec: func(ctx context.Context, _ []string) error {
+			if err := validateListParameters(projectID, filter); err != nil {
+				return err
+			}
+			return listMetrics(ctx, logger, projectID, filter)
+		},
+	}
 	root := &ffcli.Command{
 		ShortUsage:  "gce-metric <subcommand> [flags]",
-		Subcommands: []*ffcli.Command{sawtooth, sine, square, triangle, delete},
+		Subcommands: []*ffcli.Command{sawtooth, sine, square, triangle, delete, list},
 		FlagSet:     rootFlagSet,
 		Exec: func(context.Context, []string) error {
 			return flag.ErrHelp
@@ -304,6 +323,14 @@ func validateDeleteParameters(metricTypes []string, projectID string) error {
 			return fmt.Errorf("metric type must be provided")
 		}
 	}
+	if len(strings.TrimSpace(projectID)) < 1 {
+		return fmt.Errorf("project ID must be provided")
+	}
+	return nil
+}
+
+// Return an error if the parameters required to list custom metrics are incomplete
+func validateListParameters(projectID string, filter string) error {
 	if len(strings.TrimSpace(projectID)) < 1 {
 		return fmt.Errorf("project ID must be provided")
 	}
@@ -578,4 +605,33 @@ func deleteMetrics(ctx context.Context, logger *zap.SugaredLogger, metricTypes [
 		)
 	}
 	return nil
+}
+
+// List custom metrics
+func listMetrics(ctx context.Context, logger *zap.SugaredLogger, projectID string, filter string) error {
+	client, err := monitoring.NewMetricClient(ctx)
+	if err != nil {
+		return err
+	}
+	request := &monitoringpb.ListMetricDescriptorsRequest{
+		Name: "projects/" + projectID,
+	}
+	f := strings.TrimSpace(filter)
+	if len(f) > 0 {
+		request.Filter = f
+	}
+	it := client.ListMetricDescriptors(ctx, request)
+	for {
+		response, err := it.Next()
+		switch {
+		case err == iterator.Done:
+			return nil
+		case err != nil:
+			return err
+		default:
+			logger.Infow("response",
+				"metricType", response.Type,
+			)
+		}
+	}
 }
