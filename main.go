@@ -56,6 +56,7 @@ func main() {
 		deleteFlagSet      *flag.FlagSet
 		listFlagSet        *flag.FlagSet
 		filter             string
+		quiet              bool
 	)
 	logger, level := initLogger()
 	defer func() {
@@ -65,8 +66,10 @@ func main() {
 
 	rootFlagSet = flag.NewFlagSet("gce-metric", flag.ExitOnError)
 	rootFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
+	rootFlagSet.BoolVar(&quiet, "quiet", false, "disable all but ERROR and FATAL logging")
 	generatorFlagSet = flag.NewFlagSet("generator", flag.ExitOnError)
 	generatorFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
+	generatorFlagSet.BoolVar(&quiet, "quiet", false, "disable all but ERROR and FATAL logging")
 	generatorFlagSet.DurationVar(&sample, "sample", 60*time.Second, "sample time, specified in Go duration format. Default value is 60s")
 	generatorFlagSet.DurationVar(&period, "period", 10*time.Minute, "the period of the underlying wave function; e.g. the time for a complete cycle from floor to ceiling and back.")
 	generatorFlagSet.Float64Var(&floor, "floor", 1.0, "the lowest value to send to metric; e.g. '1.0'")
@@ -77,9 +80,11 @@ func main() {
 	generatorFlagSet.StringVar(&resourceLabelsArgs, "resourcelabels", "", "a set of resource label key:value pairs to send, separated by commas. E.g. -resourcelabels=name:test,foo:bar")
 	deleteFlagSet = flag.NewFlagSet("delete", flag.ExitOnError)
 	deleteFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
+	deleteFlagSet.BoolVar(&quiet, "quiet", false, "disable all but ERROR and FATAL logging")
 	deleteFlagSet.StringVar(&overrideProjectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
 	listFlagSet = flag.NewFlagSet("delete", flag.ExitOnError)
 	listFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
+	listFlagSet.BoolVar(&quiet, "quiet", false, "disable all but ERROR and FATAL logging")
 	listFlagSet.StringVar(&overrideProjectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
 	listFlagSet.StringVar(&filter, "filter", "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")
 	sawtooth := &ffcli.Command{
@@ -180,6 +185,9 @@ func main() {
 
 	if verbose {
 		level.SetLevel(zapcore.DebugLevel)
+	}
+	if quiet {
+		level.SetLevel(zapcore.ErrorLevel)
 	}
 
 	// Get default values from execution environment
@@ -629,9 +637,10 @@ func listMetrics(ctx context.Context, logger *zap.SugaredLogger, projectID strin
 		case err != nil:
 			return err
 		default:
-			logger.Infow("response",
-				"metricType", response.Type,
+			logger.Debugw("Metric descriptor response",
+				"response", response,
 			)
+			fmt.Println(response.Type)
 		}
 	}
 }
