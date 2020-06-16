@@ -270,7 +270,7 @@ func newEnvironmentParameters(logger *zap.SugaredLogger) (projectID string, metr
 	} else {
 		logger.Debug("Not running on GCE")
 		resourceType = "generic_node"
-		resourceLabels["location"] = "us-west1"
+		resourceLabels["location"] = "global"
 		resourceLabels["namespace"] = "gce-metric"
 		resourceLabels["node_id"] = uuid.New().String()
 	}
