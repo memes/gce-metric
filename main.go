@@ -15,7 +15,6 @@ import (
 
 	"cloud.google.com/go/compute/metadata"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
-	timestamppb "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/google/uuid"
 	"github.com/peterbourgon/ff/v3/ffcli"
 	"go.uber.org/zap"
@@ -24,6 +23,7 @@ import (
 	metricpb "google.golang.org/genproto/googleapis/api/metric"
 	monitoredrespb "google.golang.org/genproto/googleapis/api/monitoredres"
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -31,8 +31,10 @@ const (
 	GCPMinimumSampleDuration = 10 * time.Second
 )
 
-type metricValueGenerator func(*zap.SugaredLogger, float64) *monitoringpb.TypedValue
-type metricRequestGenerator func(float64) *monitoringpb.CreateTimeSeriesRequest
+type (
+	metricValueGenerator   func(*zap.SugaredLogger, float64) *monitoringpb.TypedValue
+	metricRequestGenerator func(float64) *monitoringpb.CreateTimeSeriesRequest
+)
 
 func main() {
 	var (
