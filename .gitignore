@@ -1,1 +1,5 @@
 .envrc
+.tool-versions
+.direnv
+.dist
+gce-metric

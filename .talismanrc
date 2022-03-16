@@ -1,5 +1,6 @@
+# talisman config for project
+---
+version: "1.0"
 fileignoreconfig:
-  # False positive; the 'password' in release.yml is not the actual
-  # password
   - filename: .github/workflows/release.yml
-    checksum: 1c325ea157cee18d3c8fc71bfe78daf59e8dc90ea815a840b000526ee7dec242
+    checksum: 44473e9500041150b7e73fa84399901c5a4ad27f07a5899e57c0bc53d1358de9

@@ -1,30 +1,39 @@
----
+# These github actions will perform linting using pre-commit.
 # yamllint disable rule:line-length
+---
 name: pre-commit
 
 # yamllint disable-line rule:truthy
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [main]
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - name: set PY
-        run: echo "::set-env name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
-      - uses: pre-commit/action@v1.1.0
+      - uses: actions/checkout@v3
+      - name: install talisman
+        run: |
+          sudo curl -sLo /usr/local/bin/talisman https://github.com/thoughtworks/talisman/releases/download/v1.26.0/talisman_linux_amd64
+          sudo chmod 0755 /usr/local/bin/talisman
+      - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v2.0.3
   hadolint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: brpaz/hadolint-action@master
+      - uses: actions/checkout@v3
+      - uses: hadolint/hadolint-action@v1.6.0
         with:
           dockerfile: "Dockerfile"
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: golangci/golangci-lint-action@v3.1.0
+        with:
+          version: latest
