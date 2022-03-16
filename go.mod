@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	cloud.google.com/go v0.58.0
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.1.1
 	github.com/peterbourgon/ff/v3 v3.0.0
 	go.uber.org/zap v1.15.0
