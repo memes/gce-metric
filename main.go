@@ -49,12 +49,8 @@ func main() {
 		resourceLabels     map[string]string
 		ticker             *time.Ticker
 		overrideProjectID  string
-		rootFlagSet        *flag.FlagSet
-		generatorFlagSet   *flag.FlagSet
 		metricLabelsArgs   string
 		resourceLabelsArgs string
-		deleteFlagSet      *flag.FlagSet
-		listFlagSet        *flag.FlagSet
 		filter             string
 		quiet              bool
 	)
@@ -64,10 +60,10 @@ func main() {
 	}()
 	logger.Debug("Starting application")
 
-	rootFlagSet = flag.NewFlagSet("gce-metric", flag.ExitOnError)
+	rootFlagSet := flag.NewFlagSet("gce-metric", flag.ExitOnError)
 	rootFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
 	rootFlagSet.BoolVar(&quiet, "quiet", false, "disable all but ERROR and FATAL logging")
-	generatorFlagSet = flag.NewFlagSet("generator", flag.ExitOnError)
+	generatorFlagSet := flag.NewFlagSet("generator", flag.ExitOnError)
 	generatorFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
 	generatorFlagSet.BoolVar(&quiet, "quiet", false, "disable all but ERROR and FATAL logging")
 	generatorFlagSet.DurationVar(&sample, "sample", 60*time.Second, "sample time, specified in Go duration format. Default value is 60s")
@@ -78,11 +74,11 @@ func main() {
 	generatorFlagSet.StringVar(&overrideProjectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
 	generatorFlagSet.StringVar(&metricLabelsArgs, "metriclabels", "", "a set of metric label key:value pairs to send, separated by commas. E.g. -metriclabels=name:test,foo:bar")
 	generatorFlagSet.StringVar(&resourceLabelsArgs, "resourcelabels", "", "a set of resource label key:value pairs to send, separated by commas. E.g. -resourcelabels=name:test,foo:bar")
-	deleteFlagSet = flag.NewFlagSet("delete", flag.ExitOnError)
+	deleteFlagSet := flag.NewFlagSet("delete", flag.ExitOnError)
 	deleteFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
 	deleteFlagSet.BoolVar(&quiet, "quiet", false, "disable all but ERROR and FATAL logging")
 	deleteFlagSet.StringVar(&overrideProjectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
-	listFlagSet = flag.NewFlagSet("delete", flag.ExitOnError)
+	listFlagSet := flag.NewFlagSet("delete", flag.ExitOnError)
 	listFlagSet.BoolVar(&verbose, "verbose", false, "enable DEBUG log level")
 	listFlagSet.BoolVar(&quiet, "quiet", false, "disable all but ERROR and FATAL logging")
 	listFlagSet.StringVar(&overrideProjectID, "project", "", "the GCP project id to use; specify if not running on GCE or to override project id")
@@ -270,7 +266,7 @@ func newEnvironmentParameters(logger *zap.SugaredLogger) (projectID string, metr
 	} else {
 		logger.Debug("Not running on GCE")
 		resourceType = "generic_node"
-		resourceLabels["location"] = "us-west1"
+		resourceLabels["location"] = "global"
 		resourceLabels["namespace"] = "gce-metric"
 		resourceLabels["node_id"] = uuid.New().String()
 	}
