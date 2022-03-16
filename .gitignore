@@ -1,5 +1,8 @@
+# Ignore my asdf/direnv setup
 .envrc
 .tool-versions
 .direnv
-.dist
+
+# Ignore binaries
+dist
 gce-metric
