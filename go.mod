@@ -3,13 +3,13 @@ module github.com/memes/gce-metric
 go 1.17
 
 require (
-	cloud.google.com/go/compute v1.5.0
+	cloud.google.com/go/compute v1.6.0
 	cloud.google.com/go/monitoring v1.4.0
 	github.com/google/uuid v1.3.0
 	github.com/peterbourgon/ff/v3 v3.1.2
 	go.uber.org/zap v1.21.0
 	google.golang.org/api v0.74.0
-	google.golang.org/genproto v0.0.0-20220324131243-acbaeb5b85eb
+	google.golang.org/genproto v0.0.0-20220413183235-5e96e2839df9
 	google.golang.org/protobuf v1.28.0
 )
 
@@ -17,7 +17,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
-	github.com/googleapis/gax-go/v2 v2.2.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.3.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
