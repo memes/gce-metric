@@ -4,5 +4,5 @@
 .direnv
 
 # Ignore binaries
-dist
-gce-metric
+/dist
+/gce-metric
