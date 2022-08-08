@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/compute v1.5.0
 	cloud.google.com/go/monitoring v1.4.0
 	github.com/google/uuid v1.3.0
-	github.com/peterbourgon/ff/v3 v3.1.2
+	github.com/peterbourgon/ff/v3 v3.3.0
 	go.uber.org/zap v1.21.0
 	google.golang.org/api v0.74.0
 	google.golang.org/genproto v0.0.0-20220324131243-acbaeb5b85eb
