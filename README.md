@@ -1,7 +1,7 @@
 # GCP custom metric generator
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/memes/gce-metric.svg)](https://pkg.go.dev/github.com/memes/gce-metric)
-[![Go Report Card](https://goreportcard.com/badge/github.com/memes/ggce-metric)](https://goreportcard.com/report/github.com/memes/gce-metric)
+[![Go Report Card](https://goreportcard.com/badge/github.com/memes/gce-metric)](https://goreportcard.com/report/github.com/memes/gce-metric)
 
 A synthetic metric generator for Google Cloud that will create a time-series of
 artificial metrics that can be consumed by an autoscaler, or other metric-bound
