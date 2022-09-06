@@ -2,22 +2,30 @@ package pipeline
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
-	"sync"
 
 	"cloud.google.com/go/compute/metadata"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	"github.com/memes/gce-metric/pkg/generators"
-	"google.golang.org/genproto/googleapis/api/label"
 	metricpb "google.golang.org/genproto/googleapis/api/metric"
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
-var errNotGCP = fmt.Errorf("not running on Google Cloud")
+const (
+	DefaultMetricType = "custom.googleapis.com/gce_metric"
+	DefaultLocation   = "global"
+	DefaultNamespace  = "github.com/memes/gce-metric"
+)
+
+// This error will be returned if a pipeline function requires a Google Cloud
+// execution environment.
+var errNotGCP = errors.New("not running on Google Cloud")
 
 type metadataClient interface {
 	ProjectID() (string, error)
@@ -38,15 +46,12 @@ type Pipeline struct {
 	logger                     logr.Logger
 	projectID                  string
 	metricType                 string
-	asInteger                  bool
 	metricLabels               map[string]string
-	metricDescriptors          map[string]string
 	excludeDefaultTransformers bool
 	transformers               []Transformer
 	emitter                    Emitter
 	closer                     Closer
 	client                     *monitoring.MetricClient
-	descriptor                 *monitoringpb.CreateMetricDescriptorRequest
 	// Allow unit tests to emulate a GCP environment
 	onGCE          func() bool
 	metadataClient metadataClient
@@ -60,11 +65,20 @@ func (p *Pipeline) Close() error {
 }
 
 func (p *Pipeline) BuildRequest(metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
-	req := &monitoringpb.CreateTimeSeriesRequest{}
-	var err error
+	req := &monitoringpb.CreateTimeSeriesRequest{
+		Name: "projects/" + p.projectID,
+		TimeSeries: []*monitoringpb.TimeSeries{
+			{
+				Metric: &metricpb.Metric{
+					Type:   p.metricType,
+					Labels: p.metricLabels,
+				},
+				MetricKind: metricpb.MetricDescriptor_GAUGE,
+			},
+		},
+	}
 	for _, transformer := range p.transformers {
-		req, err = transformer(req, metric)
-		if err != nil {
+		if err := transformer(req, metric); err != nil {
 			return req, err
 		}
 	}
@@ -94,13 +108,6 @@ func WithMetricType(metricType string) Option {
 	}
 }
 
-func AsInteger() Option {
-	return func(p *Pipeline) error {
-		p.asInteger = true
-		return nil
-	}
-}
-
 func WithoutDefaultTransformers() Option {
 	return func(p *Pipeline) error {
 		p.excludeDefaultTransformers = true
@@ -117,18 +124,8 @@ func WithTransformers(transformers []Transformer) Option {
 
 func WithDefaultEmitter() Option {
 	return func(p *Pipeline) error {
-		var createDefinition sync.Once
 		p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
-			var err error
-			createDefinition.Do(func() {
-				if p.descriptor != nil {
-					_, err = p.client.CreateMetricDescriptor(ctx, p.descriptor)
-				}
-			})
-			if err != nil {
-				return fmt.Errorf("failure creating metric descriptor: %w", err)
-			}
-			if err = p.client.CreateTimeSeries(ctx, req); err != nil {
+			if err := p.client.CreateTimeSeries(ctx, req); err != nil {
 				return fmt.Errorf("failure sending create time-series request: %w", err)
 			}
 			return nil
@@ -148,18 +145,8 @@ func WithDefaultEmitter() Option {
 
 func WithWriterEmitter(writer io.Writer) Option {
 	return func(p *Pipeline) error {
-		var createDefinition sync.Once
 		p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
-			var err error
-			createDefinition.Do(func() {
-				if p.descriptor != nil {
-					_, err = fmt.Fprintf(writer, "%+v\n", p.descriptor)
-				}
-			})
-			if err != nil {
-				return fmt.Errorf("failure writing metric descriptor: %w", err)
-			}
-			if _, err = fmt.Fprintf(writer, "%+v\n", req); err != nil {
+			if _, err := fmt.Fprintf(writer, "%s\n", prototext.Format(req)); err != nil {
 				return fmt.Errorf("failure writing time-series request: %w", err)
 			}
 			return nil
@@ -171,24 +158,10 @@ func WithWriterEmitter(writer io.Writer) Option {
 	}
 }
 
-func withOnGCE(onGCE func() bool) Option {
-	return func(p *Pipeline) error {
-		p.onGCE = onGCE
-		return nil
-	}
-}
-
-func withMetadataClient(metadataClient *metadata.Client) Option {
-	return func(p *Pipeline) error {
-		p.metadataClient = metadataClient
-		return nil
-	}
-}
-
 func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 	pipeline := &Pipeline{
 		logger:         logr.Discard(),
-		metricType:     "custom.googleapis.com/gce_metric",
+		metricType:     DefaultMetricType,
 		transformers:   []Transformer{},
 		onGCE:          metadata.OnGCE,
 		metadataClient: metadata.NewClient(nil),
@@ -209,11 +182,11 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 		pipeline.projectID = projectID
 	}
 	if !pipeline.excludeDefaultTransformers {
-		baseTransformers, err := pipeline.baseTransformers(ctx)
+		defaultTransformers, err := pipeline.defaultTransformers(ctx)
 		if err != nil {
 			return nil, err
 		}
-		pipeline.transformers = append(baseTransformers, pipeline.transformers...)
+		pipeline.transformers = append(defaultTransformers, pipeline.transformers...)
 	}
 	if pipeline.emitter == nil {
 		err := WithDefaultEmitter()(pipeline)
@@ -231,10 +204,8 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 	return pipeline, nil
 }
 
-func (p *Pipeline) baseTransformers(_ context.Context) ([]Transformer, error) {
-	transformers := []Transformer{
-		NewCreateTimeSeriesRequestTransformer(p.projectID, p.metricType, p.metricLabels),
-	}
+func (p *Pipeline) defaultTransformers(_ context.Context) ([]Transformer, error) {
+	transformers := []Transformer{}
 	if p.onGCE() {
 		instanceID, err := p.metadataClient.InstanceID()
 		if err != nil {
@@ -259,36 +230,10 @@ func (p *Pipeline) baseTransformers(_ context.Context) ([]Transformer, error) {
 	} else {
 		// Use a transformer that adds a generic_node resource type to
 		// the request.
-		transformers = append(transformers, NewGenericMonitoredResourceTransformer(p.projectID, "global", "github.com/memes/gce-metric", uuid.New().String()))
+		transformers = append(transformers, NewGenericMonitoredResourceTransformer(p.projectID, DefaultLocation, DefaultNamespace, uuid.New().String()))
 	}
-	if p.asInteger {
-		transformers = append(transformers, IntegerTypeValueTransformer)
-	} else {
-		transformers = append(transformers, DoubleTypedValueTransformer)
-	}
+	transformers = append(transformers, NewDoubleTypedValueTransformer())
 	return transformers, nil
-}
-
-func NewCreateMetricDescriptorRequest(projectID, metricType, name, displayName string, metricLabels map[string]string, valueType metricpb.MetricDescriptor_ValueType) monitoringpb.CreateMetricDescriptorRequest {
-	labels := []*label.LabelDescriptor{}
-	for key, value := range metricLabels {
-		labels = append(labels, &label.LabelDescriptor{
-			Key:         key,
-			Description: value,
-			ValueType:   label.LabelDescriptor_STRING,
-		})
-	}
-	return monitoringpb.CreateMetricDescriptorRequest{
-		Name: "projects/" + projectID,
-		MetricDescriptor: &metricpb.MetricDescriptor{
-			Name:        name,
-			Type:        metricType,
-			Labels:      labels,
-			MetricKind:  metricpb.MetricDescriptor_GAUGE,
-			ValueType:   valueType,
-			DisplayName: displayName,
-		},
-	}
 }
 
 func (p *Pipeline) Processor() Processor {

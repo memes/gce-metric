@@ -13,15 +13,19 @@ import (
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
+const FilterFlagName = "filter"
+
 func newListCommand() (*cobra.Command, error) {
 	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "list custom metric timeseries",
-		RunE:  listMain,
+		Use:     "list",
+		Short:   "List custom metric time-series that match a filter",
+		Long:    "list long",
+		Example: "list example",
+		RunE:    listMain,
 	}
-	listCmd.PersistentFlags().String("filter", "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")
-	if err := viper.BindPFlag("filter", listCmd.PersistentFlags().Lookup("filter")); err != nil {
-		return nil, fmt.Errorf("failed to bind filter pflag: %w", err)
+	listCmd.PersistentFlags().String(FilterFlagName, "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")
+	if err := viper.BindPFlag(FilterFlagName, listCmd.PersistentFlags().Lookup(FilterFlagName)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", FilterFlagName, err)
 	}
 	return listCmd, nil
 }
@@ -30,14 +34,14 @@ func listMain(cmd *cobra.Command, _ []string) error {
 	logger.V(0).Info("Preparing list client")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	projectID, err := effectiveProjectID(ctx)
+	projectID, err := effectiveProjectID()
 	if err != nil {
 		return err
 	}
 	req := monitoringpb.ListMetricDescriptorsRequest{
 		Name: "projects/" + projectID,
 	}
-	if filter := viper.GetString("filter"); filter != "" {
+	if filter := viper.GetString(FilterFlagName); filter != "" {
 		req.Filter = filter
 	}
 	client, err := monitoring.NewMetricClient(ctx)

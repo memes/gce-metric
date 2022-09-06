@@ -1,5 +1,5 @@
-// This package contains a gRPC client and server to demonstrate use of library
-// in a distributed environment.
+// This package provides an executable that can generate synthetic metrics for
+// Google Cloud that match a profile.
 package main
 
 import (

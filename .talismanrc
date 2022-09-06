@@ -2,11 +2,15 @@
 ---
 version: "1.0"
 fileignoreconfig:
-  - filename: .github/workflows/release.yml
-    checksum: 44473e9500041150b7e73fa84399901c5a4ad27f07a5899e57c0bc53d1358de9
-  - filename: go.sum
-    checksum: c784474ff36c9530855345846657f47712d7cebdde0971fc1096c61c938d0785
-  - filename: cmd/gce-metric/generators.go
-    checksum: 0d34e345af7f0ed08baa8a4aa287dedc13c4506c93b6237ee9fa1b975c5b4ed3
-  - filename: pkg/pipeline/pipeline.go
-    checksum: 3578a603bf0318d3c0530b58c518897def1e1927abb61c850e33b6df6c602972
+- filename: .github/workflows/release.yml
+  checksum: 44473e9500041150b7e73fa84399901c5a4ad27f07a5899e57c0bc53d1358de9
+- filename: go.sum
+  checksum: b2aedb81352021816907fb9df2e82ed5d952999919bd28ae455bfa8610fbade8
+- filename: cmd/gce-metric/generators.go
+  checksum: 228d24518b8b3c10b9bc7029054039566fff97e9c68b0a9d36b091466c7d2ae2
+- filename: pkg/pipeline/pipeline.go
+  checksum: 3578a603bf0318d3c0530b58c518897def1e1927abb61c850e33b6df6c602972
+- filename: pkg/pipeline/pipeline_test.go
+  checksum: faf4910ac3abe3c0e55e9af57f86040fb2ccde9ac2286cc0e3831c6758f45a38
+- filename: README.md
+  checksum: f99873d8506cdba0af1d0045c9241cb20f8b94d4551ee8a8db623241fecf284e

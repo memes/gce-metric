@@ -14,102 +14,113 @@ import (
 	"github.com/spf13/viper"
 )
 
-func newSawtoothCommand() (*cobra.Command, error) {
+const (
+	SampleFlagName         = "sample"
+	PeriodFlagName         = "period"
+	FloorFlagName          = "floor"
+	CeilingFlagName        = "ceiling"
+	IntegerFlagName        = "integer"
+	MetricLabelsFlagName   = "metric-labels"
+	ResourceLabelsFlagName = "resource-labels"
+	ResourceTypeFlagName   = "resource-type"
+	DryRunFlagName         = "dry-run"
+)
+
+func newSawtoothCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "sawtooth",
-		Short:   "",
+		Short:   "Generate synthetic metrics from a sawtooth function",
 		Long:    "",
+		Example: "sawtooth foo",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
 	}
-	if err := addGeneratorFlags(cmd); err != nil {
-		return nil, err
-	}
-	return cmd, nil
+	addGeneratorFlags(cmd)
+	return cmd
 }
 
-func newSineCommand() (*cobra.Command, error) {
+func newSineCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "sine",
-		Short:   "",
+		Short:   "Generate synthetic metrics from a sine function",
 		Long:    "",
+		Example: "sine foo",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
 	}
-	if err := addGeneratorFlags(cmd); err != nil {
-		return nil, err
-	}
-	return cmd, nil
+	addGeneratorFlags(cmd)
+	return cmd
 }
 
-func newSquareCommand() (*cobra.Command, error) {
+func newSquareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "square",
-		Short:   "",
+		Short:   "Generate synthetic metrics from a square function",
 		Long:    "",
+		Example: "square foo",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
 	}
-	if err := addGeneratorFlags(cmd); err != nil {
-		return nil, err
-	}
-	return cmd, nil
+	addGeneratorFlags(cmd)
+	return cmd
 }
 
-func newTriangleCommand() (*cobra.Command, error) {
+func newTriangleCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "triangle",
-		Short:   "",
+		Short:   "Generate synthetic metrics from a triangle function",
 		Long:    "",
+		Example: "triangle foo",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
 	}
-	if err := addGeneratorFlags(cmd); err != nil {
-		return nil, err
-	}
-	return cmd, nil
+	addGeneratorFlags(cmd)
+	return cmd
 }
 
-func addGeneratorFlags(cmd *cobra.Command) error {
-	cmd.PersistentFlags().Duration("sample", 60*time.Second, "sample time, specified in Go duration format. Default value is 60s")
-	cmd.PersistentFlags().Duration("period", 10*time.Minute, "the period of the underlying wave function; e.g. the time for a complete cycle from floor to ceiling and back.")
-	cmd.PersistentFlags().Float64("floor", 1.0, "the lowest value to send to metric; e.g. '1.0'")
-	cmd.PersistentFlags().Float64("ceiling", 10.0, "the maximum value to send to metics; e.g. '10.0'")
-	cmd.PersistentFlags().Bool("round", false, "Round metric value to nearest integer")
-	cmd.PersistentFlags().StringToString("metriclabels", nil, "a set of metric label key=value pairs to send, separated by commas. E.g. -metriclabels=name:test,foo:bar")
-	cmd.PersistentFlags().StringToString("resourcelabels", nil, "a set of resource label key=value pairs to send, separated by commas. E.g. -resourcelabels=name:test,foo:bar")
-	cmd.PersistentFlags().Bool("dry-run", false, "Write metrics to stdout instead of to Google Cloud Monitoring")
-	return nil
+func addGeneratorFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().Duration(SampleFlagName, 60*time.Second, "sample time, specified in Go duration format. Default value is 60s")
+	cmd.PersistentFlags().Duration(PeriodFlagName, 10*time.Minute, "the period of the underlying wave function; e.g. the time for a complete cycle from floor to ceiling and back.")
+	cmd.PersistentFlags().Float64(FloorFlagName, 1.0, "the lowest value to send to metric; e.g. '1.0'")
+	cmd.PersistentFlags().Float64(CeilingFlagName, 10.0, "the maximum value to send to metics; e.g. '10.0'")
+	cmd.PersistentFlags().Bool(IntegerFlagName, false, "Round metric value to nearest integer")
+	cmd.PersistentFlags().StringToString(MetricLabelsFlagName, nil, "a set of metric label key=value pairs to send, separated by commas. E.g. --metric-labels=name=test,foo=bar")
+	cmd.PersistentFlags().StringToString(ResourceLabelsFlagName, nil, "a set of resource label key=value pairs to send, separated by commas. E.g. --resource-labels=name=test,foo=bar")
+	cmd.PersistentFlags().String(ResourceTypeFlagName, "", "TODO")
+	cmd.PersistentFlags().Bool(DryRunFlagName, false, "Write metrics to stdout instead of to Google Cloud Monitoring")
 }
 
 func bindViperFlags(cmd *cobra.Command, _ []string) error {
-	if err := viper.BindPFlag("sample", cmd.PersistentFlags().Lookup("sample")); err != nil {
-		return fmt.Errorf("failed to bind sample pflag: %w", err)
+	if err := viper.BindPFlag(SampleFlagName, cmd.PersistentFlags().Lookup(SampleFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", SampleFlagName, err)
 	}
-	if err := viper.BindPFlag("period", cmd.PersistentFlags().Lookup("period")); err != nil {
-		return fmt.Errorf("failed to bind period pflag: %w", err)
+	if err := viper.BindPFlag(PeriodFlagName, cmd.PersistentFlags().Lookup(PeriodFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", PeriodFlagName, err)
 	}
-	if err := viper.BindPFlag("floor", cmd.PersistentFlags().Lookup("floor")); err != nil {
-		return fmt.Errorf("failed to bind floor pflag: %w", err)
+	if err := viper.BindPFlag(FloorFlagName, cmd.PersistentFlags().Lookup(FloorFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", FloorFlagName, err)
 	}
-	if err := viper.BindPFlag("ceiling", cmd.PersistentFlags().Lookup("ceiling")); err != nil {
-		return fmt.Errorf("failed to bind ceiling pflag: %w", err)
+	if err := viper.BindPFlag(CeilingFlagName, cmd.PersistentFlags().Lookup(CeilingFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", CeilingFlagName, err)
 	}
-	if err := viper.BindPFlag("round", cmd.PersistentFlags().Lookup("round")); err != nil {
-		return fmt.Errorf("failed to bind round pflag: %w", err)
+	if err := viper.BindPFlag(IntegerFlagName, cmd.PersistentFlags().Lookup(IntegerFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", IntegerFlagName, err)
 	}
-	if err := viper.BindPFlag("metriclabels", cmd.PersistentFlags().Lookup("metriclabels")); err != nil {
-		return fmt.Errorf("failed to bind metriclabels pflag: %w", err)
+	if err := viper.BindPFlag(MetricLabelsFlagName, cmd.PersistentFlags().Lookup(MetricLabelsFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", MetricLabelsFlagName, err)
 	}
-	if err := viper.BindPFlag("resourcelabels", cmd.PersistentFlags().Lookup("resourcelabels")); err != nil {
-		return fmt.Errorf("failed to bind resourcelabels pflag: %w", err)
+	if err := viper.BindPFlag(ResourceLabelsFlagName, cmd.PersistentFlags().Lookup(ResourceLabelsFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", ResourceLabelsFlagName, err)
 	}
-	if err := viper.BindPFlag("dry-run", cmd.PersistentFlags().Lookup("dry-run")); err != nil {
-		return fmt.Errorf("failed to bind dry-run pflag: %w", err)
+	if err := viper.BindPFlag(ResourceTypeFlagName, cmd.PersistentFlags().Lookup(ResourceTypeFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", ResourceTypeFlagName, err)
+	}
+	if err := viper.BindPFlag(DryRunFlagName, cmd.PersistentFlags().Lookup(DryRunFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", DryRunFlagName, err)
 	}
 	return nil
 }
@@ -119,22 +130,27 @@ func generatorMain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failure parsing PeriodicType: %w", err)
 	}
-	project := viper.GetString("project")
-	sample := viper.GetDuration("sample")
-	period := viper.GetDuration("period")
-	floor := viper.GetFloat64("floor")
-	ceiling := viper.GetFloat64("ceiling")
-	dryRun := viper.GetBool("dry-run")
-	rounded := viper.GetBool("round")
-	logger := logger.WithValues("periodicType", periodicType.String(), "project", project, "sample", sample, "period", period, "floor", floor, "ceiling", ceiling, "dryRun", dryRun, "rounded", rounded)
+	project := viper.GetString(ProjectIDFlagName)
+	sample := viper.GetDuration(SampleFlagName)
+	period := viper.GetDuration(PeriodFlagName)
+	floor := viper.GetFloat64(FloorFlagName)
+	ceiling := viper.GetFloat64(CeilingFlagName)
+	dryRun := viper.GetBool(DryRunFlagName)
+	asInteger := viper.GetBool(IntegerFlagName)
+	logger := logger.WithValues("periodicType", periodicType.String(), "project", project, "sample", sample, "period", period, FloorFlagName, floor, CeilingFlagName, ceiling, "dryRun", dryRun, "asInteger", asInteger)
 	logger.V(0).Info("Building synthetic metric generator pipeline")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Create the timestamped value generator
-	valueGenerator, output := generators.NewPeriodicGenerator(logger,
-		generators.NewPeriodicRangeCalculator(floor, ceiling, periodicType),
-		period)
+	periodicGenerator, reader, err := generators.NewPeriodicGenerator(
+		generators.WithLogger(logger),
+		generators.WithValueCalculator(generators.NewPeriodicRangeCalculator(floor, ceiling, periodicType)),
+		generators.WithPeriod(period),
+	)
+	if err != nil {
+		return fmt.Errorf("failure building PeriodicGenerator: %w", err)
+	}
 	// Build the pipeline from options.
 	pipelineOptions := []pipeline.Option{
 		pipeline.WithLogger(logger),
@@ -143,8 +159,8 @@ func generatorMain(cmd *cobra.Command, args []string) error {
 	if project != "" {
 		pipelineOptions = append(pipelineOptions, pipeline.WithProjectID(project))
 	}
-	if rounded {
-		pipelineOptions = append(pipelineOptions, pipeline.AsInteger())
+	if asInteger {
+		pipelineOptions = append(pipelineOptions, pipeline.WithTransformers([]pipeline.Transformer{pipeline.NewIntegerTypedValueTransformer()}))
 	}
 	if dryRun {
 		pipelineOptions = append(pipelineOptions, pipeline.WithWriterEmitter(os.Stdout))
@@ -164,18 +180,13 @@ func generatorMain(cmd *cobra.Command, args []string) error {
 	go func() {
 		logger.V(1).Info("Launching pipeline processor")
 		processor := pipe.Processor()
-		if err := processor(ctx, output); err != nil {
+		if err := processor(ctx, reader); err != nil {
 			logger.Error(err, "Pipeline processor returned an error")
 			cancel()
 		}
 	}()
-	go func() {
-		logger.V(1).Info("Launching value generator")
-		if err := valueGenerator(ctx, ticker.C); err != nil {
-			logger.Error(err, "Generator returned an error")
-			cancel()
-		}
-	}()
+	logger.V(1).Info("Launching periodic generator")
+	go periodicGenerator(ctx, ticker.C)
 	logger.V(1).Info("Goroutines launched, waiting for processing to be interrupted")
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)

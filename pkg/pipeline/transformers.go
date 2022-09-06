@@ -1,37 +1,28 @@
 package pipeline
 
 import (
+	"errors"
 	"math"
 
 	"github.com/memes/gce-metric/pkg/generators"
-	metricpb "google.golang.org/genproto/googleapis/api/metric"
 	monitoredrespb "google.golang.org/genproto/googleapis/api/monitoredres"
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// Defines a function that takes a monitoring CreateTimeSeriesRequest object and
-// a moment-in-time Metric object, and returns a modified CreateTimeSeriesRequest.
-type Transformer func(*monitoringpb.CreateTimeSeriesRequest, generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error)
+var ErrNilCreateTimeSeriesRequest = errors.New("transformer received nil as CreateTimeSeriesRequest")
 
-func NewCreateTimeSeriesRequestTransformer(projectID, metricType string, metricLabels map[string]string) Transformer {
-	return func(_ *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
-		return &monitoringpb.CreateTimeSeriesRequest{
-			Name: "projects/" + projectID,
-			TimeSeries: []*monitoringpb.TimeSeries{
-				{
-					Metric: &metricpb.Metric{
-						Type:   metricType,
-						Labels: metricLabels,
-					},
-				},
-			},
-		}, nil
-	}
-}
+// Defines a function that mutates a monitoring CreateTimeSeriesRequest object
+// using the supplied moment-in-time Metric object.
+type Transformer func(*monitoringpb.CreateTimeSeriesRequest, generators.Metric) error
 
+// Returns a Transformer that will insert a generic_node resource into each
+// time-series value.
 func NewGenericMonitoredResourceTransformer(projectID, location, namespace, nodeID string) Transformer {
-	return func(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
+		}
 		for _, series := range req.TimeSeries {
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "generic_node",
@@ -43,12 +34,17 @@ func NewGenericMonitoredResourceTransformer(projectID, location, namespace, node
 				},
 			}
 		}
-		return req, nil
+		return nil
 	}
 }
 
+// Returns a Transformer that will insert a gce_instance resource into each
+// time-series value.
 func NewGCEMonitoredResourceTransformer(projectID, instanceID, zone string) Transformer {
-	return func(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
+		}
 		for _, series := range req.TimeSeries {
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "gce_instance",
@@ -59,13 +55,17 @@ func NewGCEMonitoredResourceTransformer(projectID, instanceID, zone string) Tran
 				},
 			}
 		}
-		return req, nil
+		return nil
 	}
 }
 
-// Implements a PipelineTransformer that
+// Returns a Transformer that will insert a gke_container resource into each
+// time-series value.
 func NewGKEMonitoredResourceTransformer(projectID, clusterName, namespaceID, instanceID, podID, containerName, zone string) Transformer {
-	return func(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
+		}
 		for _, series := range req.TimeSeries {
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "gke_container",
@@ -80,56 +80,156 @@ func NewGKEMonitoredResourceTransformer(projectID, clusterName, namespaceID, ins
 				},
 			}
 		}
-		return req, nil
+		return nil
 	}
 }
 
-// Implements a PipelineTransformer that replaces the time-series point-in-time
-// record with the embedded value in metric.
-func DoubleTypedValueTransformer(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
-	for _, series := range req.TimeSeries {
-		series.Points = []*monitoringpb.Point{
-			{
-				Interval: &monitoringpb.TimeInterval{
-					StartTime: &timestamppb.Timestamp{
-						Seconds: metric.Timestamp.Unix(),
-					},
-					EndTime: &timestamppb.Timestamp{
-						Seconds: metric.Timestamp.Unix(),
-					},
-				},
-				Value: &monitoringpb.TypedValue{
-					Value: &monitoringpb.TypedValue_DoubleValue{
-						DoubleValue: metric.Value,
-					},
-				},
-			},
+// Returns a Transformer that replaces the time-series point-in-time record with
+// the embedded value in metric.
+func NewDoubleTypedValueTransformer() Transformer {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
 		}
+		for _, series := range req.TimeSeries {
+			series.Points = []*monitoringpb.Point{
+				{
+					Interval: &monitoringpb.TimeInterval{
+						StartTime: &timestamppb.Timestamp{
+							Seconds: metric.Timestamp.Unix(),
+						},
+						EndTime: &timestamppb.Timestamp{
+							Seconds: metric.Timestamp.Unix(),
+						},
+					},
+					Value: &monitoringpb.TypedValue{
+						Value: &monitoringpb.TypedValue_DoubleValue{
+							DoubleValue: metric.Value,
+						},
+					},
+				},
+			}
+		}
+		return nil
 	}
-	return req, nil
 }
 
-// Implements a PipelineTransformer that replaces the time-series point-in-time
-// record with the embedded value in metric after rounding to the nearest integer.
-func IntegerTypeValueTransformer(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
-	for _, series := range req.TimeSeries {
-		series.Points = []*monitoringpb.Point{
-			{
-				Interval: &monitoringpb.TimeInterval{
-					StartTime: &timestamppb.Timestamp{
-						Seconds: metric.Timestamp.Unix(),
-					},
-					EndTime: &timestamppb.Timestamp{
-						Seconds: metric.Timestamp.Unix(),
-					},
-				},
-				Value: &monitoringpb.TypedValue{
-					Value: &monitoringpb.TypedValue_Int64Value{
-						Int64Value: int64(math.Round(metric.Value)),
-					},
-				},
-			},
+// Returns a Transformer that replaces the time-series point-in-time record with
+// the embedded value in metric after rounding to the nearest integer.
+func NewIntegerTypedValueTransformer() Transformer {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
 		}
+		for _, series := range req.TimeSeries {
+			series.Points = []*monitoringpb.Point{
+				{
+					Interval: &monitoringpb.TimeInterval{
+						StartTime: &timestamppb.Timestamp{
+							Seconds: metric.Timestamp.Unix(),
+						},
+						EndTime: &timestamppb.Timestamp{
+							Seconds: metric.Timestamp.Unix(),
+						},
+					},
+					Value: &monitoringpb.TypedValue{
+						Value: &monitoringpb.TypedValue_Int64Value{
+							Int64Value: int64(math.Round(metric.Value)),
+						},
+					},
+				},
+			}
+		}
+		return nil
 	}
-	return req, nil
+}
+
+// Returns a Transformer that will insert a k8s_cluster resource into each
+// time-series value.
+func NewGenericKubernetesClusterMonitoredResourceTransformer(projectID, location, clusterName string) Transformer {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
+		}
+		for _, series := range req.TimeSeries {
+			series.Resource = &monitoredrespb.MonitoredResource{
+				Type: "k8s_cluster",
+				Labels: map[string]string{
+					"project_id":   projectID,
+					"location":     location,
+					"cluster_name": clusterName,
+				},
+			}
+		}
+		return nil
+	}
+}
+
+// Returns a Transformer that will insert a k8s_container resource into each
+// time-series value.
+func NewGenericKubernetesContainerMonitoredResourceTransformer(projectID, location, clusterName, namespaceID, podID, containerName string) Transformer {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
+		}
+		for _, series := range req.TimeSeries {
+			series.Resource = &monitoredrespb.MonitoredResource{
+				Type: "k8s_container",
+				Labels: map[string]string{
+					"project_id":     projectID,
+					"location":       location,
+					"cluster_name":   clusterName,
+					"namespace_name": namespaceID,
+					"pod_name":       podID,
+					"container_name": containerName,
+				},
+			}
+		}
+		return nil
+	}
+}
+
+// Returns a Transformer that will insert a k8s_node resource into each
+// time-series value.
+func NewGenericKubernetesNodeMonitoredResourceTransformer(projectID, location, clusterName, nodeName string) Transformer {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
+		}
+		for _, series := range req.TimeSeries {
+			series.Resource = &monitoredrespb.MonitoredResource{
+				Type: "k8s_node",
+				Labels: map[string]string{
+					"project_id":   projectID,
+					"location":     location,
+					"cluster_name": clusterName,
+					"node_name":    nodeName,
+				},
+			}
+		}
+		return nil
+	}
+}
+
+// Returns a Transformer that will insert a k8s_pod resource into each time-series
+// value.
+func NewGenericKubernetesPodMonitoredResourceTransformer(projectID, location, clusterName, namespaceID, podID string) Transformer {
+	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
+		if req == nil {
+			return ErrNilCreateTimeSeriesRequest
+		}
+		for _, series := range req.TimeSeries {
+			series.Resource = &monitoredrespb.MonitoredResource{
+				Type: "k8s_pod",
+				Labels: map[string]string{
+					"project_id":     projectID,
+					"location":       location,
+					"cluster_name":   clusterName,
+					"namespace_name": namespaceID,
+					"pod_name":       podID,
+				},
+			}
+		}
+		return nil
+	}
 }

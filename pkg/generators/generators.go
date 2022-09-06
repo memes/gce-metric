@@ -1,154 +1,110 @@
-// Package generators
+// Package generators provides functionality to generatehas types that can generate periodic, timestamped, values
+// that can be used as a source of synthetic metrics.
 package generators
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"math"
+	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
 )
 
-type (
-	Metric struct {
-		Value     float64
-		Timestamp time.Time
-	}
-	// Defines a function that will block until the context is cancelled,
-	// emitting a Metric value to the output channel on each tick received
-	// by the ticker channel.
-	PeriodicGenerator func(ctx context.Context, ticker <-chan time.Time) error
-	// Defines a function that will return a float64 value for the given
-	// phase value.
-	ValueCalculator func(phase float64) float64
-	// Defines the periodic function generators known to the package.
-	PeriodicType int
-)
-
-const (
-	Invalid PeriodicType = iota
-	// Represents a periodic function that generates a sawtooth wave, rising
-	// linearly from 0.0 to 1.0 over one cycle, before falling back to 0.0
-	// and repeating.
-	Sawtooth
-	// Represents a periodic function that generates a sine wave, resized to
-	// return a value between 0.0 and 1.0 inclusive, phase-shifted so that
-	// values calculated when phase is close to an integer will be 0.0.
-	Sine
-	// Represents a periodic function that generates 0.0 or 1.0 for the first
-	// half or second half of each cycle, respectively.
-	Square
-	// Represents a periodic function that generates a triangle wave, rising
-	// linearly from 0.0 to 1.0 over first half cycle, then falling linearly
-	// to 0.0 for second half of cycle.
-	Triangle
-)
-
-var (
-	ErrInvalidPeriodicType = errors.New("invalid PeriodicType name")
-	typeStrings            = map[PeriodicType]string{
-		Sawtooth: "sawtooth",
-		Sine:     "sine",
-		Square:   "square",
-		Triangle: "triangle",
-	}
-	stringTypes = map[string]PeriodicType{
-		"sawtooth": Sawtooth,
-		"sine":     Sine,
-		"square":   Square,
-		"triangle": Triangle,
-	}
-	typeCalculators = map[PeriodicType]ValueCalculator{
-		Invalid: func(_ float64) float64 {
-			return 0.0
-		},
-		Sawtooth: func(phase float64) float64 {
-			return phase - math.Floor(phase)
-		},
-		Sine: func(phase float64) float64 {
-			// Shift phase by pi/2 to get a value that starts at zero
-			// instead of 0.5.
-			return 0.5 + math.Sin(math.Pi*2.0*(phase-0.25))/2.0
-		},
-		Square: func(phase float64) float64 {
-			if math.Signbit(math.Sin(math.Pi * 2.0 * phase)) {
-				return 1.0
-			}
-			return 0.0
-		},
-		Triangle: func(phase float64) float64 {
-			return math.Abs(2.0 * (phase - math.Floor(0.5+(phase))))
-		},
-	}
-)
-
-// Returns a string identifier for the PeriodicType, or "unknown" if it is an
-// unrecognised type.
-func (v PeriodicType) String() string {
-	if str, ok := typeStrings[v]; ok {
-		return str
-	}
-	return "unknown"
+// Metric represents a point-in-time generated value which will be written
+// to the output channel of the PeriodicGenerator function.
+type Metric struct {
+	// The value of the generated metric.
+	Value float64
+	// The timestamp of the generated metric.
+	Timestamp time.Time
 }
 
-// Returns a ValueCalculator for the PeriodicType. If the periodic type does not
-// match with a known implementation the Invalid function will be returned.
-func (v PeriodicType) Calculator() ValueCalculator {
-	if fn, ok := typeCalculators[v]; ok {
-		return fn
-	}
-	return typeCalculators[Invalid]
+// Defines a function that will block until the context is cancelled,
+// emitting a Metric value to the output channel on each tick received
+// on the ticker channel.
+type PeriodicGenerator func(context.Context, <-chan time.Time)
+
+// Accumulates the fluent configuration options that will be used to create the
+// PeriodicGenerator function and Metic channel.
+type config struct {
+	logger     logr.Logger
+	calculator ValueCalculator
+	period     time.Duration
+	bufferSize int
 }
 
-func ParsePeriodicType(name string) (PeriodicType, error) {
-	if value, ok := stringTypes[name]; ok {
-		return value, nil
-	}
-	return Invalid, fmt.Errorf("i%q: %w", name, ErrInvalidPeriodicType)
-}
+// Defines a generator configuration option function.
+type Option func(*config) error
 
-// Creates a new wrapped ValueCalculator from a PeriodicType that returns values
-// in the range a through b.
-func NewPeriodicRangeCalculator(a, b float64, periodicType PeriodicType) ValueCalculator {
-	min := math.Min(a, b)
-	delta := math.Abs(a - b)
-	unitCalculator := periodicType.Calculator()
-	return func(phase float64) float64 {
-		return delta*unitCalculator(phase) + min
+// Use the supplied Logger instance for the generator function.
+func WithLogger(logger logr.Logger) Option {
+	return func(c *config) error {
+		c.logger = logger
+		return nil
 	}
 }
 
-// Returns a generator function that when called will generate a Metric value
-// using the calculator function provided on each received ticker, writing the
-// value to the returned output channel.
-func NewPeriodicGenerator(logger logr.Logger, periodicCalculator ValueCalculator, period time.Duration) (PeriodicGenerator, <-chan Metric) {
-	logger = logger.WithValues("period", period)
-	logger.V(1).Info("Building periodic value generator")
-	output := make(chan Metric, 1)
-	tZero := time.Now()
-	return func(ctx context.Context, ticker <-chan time.Time) error {
-		defer close(output)
+// Use the supplied ValueCalculator as the point-in-time generator function.
+func WithValueCalculator(calculator ValueCalculator) Option {
+	return func(c *config) error {
+		c.calculator = calculator
+		return nil
+	}
+}
+
+// Sets the duration of a single waveform cycle. For example, if period is 60s
+// then the periodic generator will complete a full cycle of values every minute.
+func WithPeriod(period time.Duration) Option {
+	return func(c *config) error {
+		c.period = period
+		return nil
+	}
+}
+
+// Returns a PeriodicGenerator function that will generate a Metric value on each
+// tick, and a read-only channel that will receive the generated value.
+// The default generator is a sawtooth waveform in the range 0 <= value <= 100
+// with a period of 20 minutes, and a buffered channel with single Metric capacity.
+// The various Option functions can be used to change this.
+func NewPeriodicGenerator(options ...Option) (PeriodicGenerator, <-chan Metric, error) {
+	config := &config{
+		logger:     logr.Discard(),
+		calculator: NewPeriodicRangeCalculator(0.0, 100.0, Sawtooth),
+		period:     20 * time.Minute,
+		bufferSize: 1,
+	}
+	for _, option := range options {
+		if err := option(config); err != nil {
+			return nil, nil, err
+		}
+	}
+	config.logger.V(2).Info("Building PeriodicGenerator and channel")
+	ch := make(chan Metric, config.bufferSize)
+	return func(ctx context.Context, ticker <-chan time.Time) {
+		defer close(ch)
+		var firstTick sync.Once
+		var tZero time.Time
 		for {
 			select {
 			case <-ctx.Done():
-				logger.V(2).Info("Context has been cancelled; exiting")
-				return nil
+				config.logger.V(2).Info("Context has been cancelled; exiting")
+				return
 			// NOTE: ticker channel is never closed; context must reach
 			// a deadline or be cancelled to prevent deadlock.
 			case tick := <-ticker:
+				// Set tZero to the timestamp of the first received tick
+				firstTick.Do(func() { tZero = tick })
 				metric := Metric{
-					Value:     periodicCalculator(tick.Sub(tZero).Seconds() / period.Seconds()),
+					Value:     config.calculator(tick.Sub(tZero).Seconds() / config.period.Seconds()),
 					Timestamp: tick,
 				}
 				select {
-				case output <- metric:
-					logger.V(2).Info("Wrote new value to output channel", "metric", metric)
+				case ch <- metric:
+					config.logger.V(2).Info("Wrote new value to output channel", "metric", metric)
 				default:
-					logger.V(2).Info("Can't write to output channel; dropping value", "metric", metric)
+					config.logger.V(2).Info("Can't write to output channel; dropping value", "metric", metric)
 				}
 			}
 		}
-	}, output
+	}, ch, nil
 }
