@@ -15,10 +15,13 @@
                 "--verbose",
                 "--verbose",
                 "--dry-run",
+                "--project",
+                "does-not-exist",
                 "--sample",
                 "1s",
                 "--period",
-                "60s"
+                "60s",
+                "custom.googleapis.com/gce-metric/sawtooth-dry-run"
             ]
         },
     ]
