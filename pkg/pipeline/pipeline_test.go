@@ -346,4 +346,84 @@ func Example() {
 		Timestamp: time.Unix(2, 0),
 	}
 	<-ctx.Done()
+	// Output:
+	// name: "projects/my-google-project-id"
+	// time_series: {
+	//   metric: {
+	//     type: "custom.googleapis.com/my-synthetic-metric"
+	//   }
+	//   resource: {
+	//     type: "generic_node"
+	//     labels: {
+	//       key: "location"
+	//       value: "global"
+	//     }
+	//     labels: {
+	//       key: "namespace"
+	//       value: "github.com/memes/gce-metric"
+	//     }
+	//     labels: {
+	//       key: "node_id"
+	//       value: "example"
+	//     }
+	//     labels: {
+	//       key: "project_id"
+	//       value: "my-google-project-id"
+	//     }
+	//   }
+	//   metric_kind: GAUGE
+	//   points: {
+	//     interval: {
+	//       end_time: {
+	//         seconds: 1
+	//       }
+	//       start_time: {
+	//         seconds: 1
+	//       }
+	//     }
+	//     value: {
+	//       double_value: 1
+	//     }
+	//   }
+	// }
+	//
+	// name: "projects/my-google-project-id"
+	// time_series: {
+	//   metric: {
+	//     type: "custom.googleapis.com/my-synthetic-metric"
+	//   }
+	//   resource: {
+	//     type: "generic_node"
+	//     labels: {
+	//       key: "location"
+	//       value: "global"
+	//     }
+	//     labels: {
+	//       key: "namespace"
+	//       value: "github.com/memes/gce-metric"
+	//     }
+	//     labels: {
+	//       key: "node_id"
+	//       value: "example"
+	//     }
+	//     labels: {
+	//       key: "project_id"
+	//       value: "my-google-project-id"
+	//     }
+	//   }
+	//   metric_kind: GAUGE
+	//   points: {
+	//     interval: {
+	//       end_time: {
+	//         seconds: 2
+	//       }
+	//       start_time: {
+	//         seconds: 2
+	//       }
+	//     }
+	//     value: {
+	//       double_value: 2
+	//     }
+	//   }
+	// }
 }
