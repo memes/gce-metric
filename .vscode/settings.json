@@ -1,16 +1,37 @@
 {
     "cSpell.words": [
+        "apiv3",
         "DOCKERHUB",
+        "dupl",
         "fileignoreconfig",
+        "genproto",
         "goarch",
         "golangci",
         "gomod",
+        "googleapis",
         "goreleaser",
         "hadolint",
         "incpatch",
+        "KUBERNETES",
         "ldflags",
+        "logr",
+        "metricpb",
+        "mitchellh",
+        "monitoredres",
+        "monitoredrespb",
+        "monitoringpb",
+        "nolint",
         "opencontainers",
+        "paralleltest",
+        "pflag",
+        "protobuf",
+        "prototext",
+        "SBOM",
+        "stdr",
+        "timestamppb",
         "trimpath",
-        "wontfix"
+        "wontfix",
+        "zerolog",
+        "zerologr"
     ]
 }

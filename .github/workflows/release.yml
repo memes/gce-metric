@@ -1,5 +1,4 @@
-# Build the package and release binaries to GitHub, containers to Docker Hub and
-# GitHub Container Registry.
+# spell-checker: disable
 ---
 name: release
 
@@ -9,30 +8,30 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - id: checkout
-        name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - id: setup-go
-        name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.17
-      - id: run-tests
-        name: Run go tests
-        run: cd v2 && go test -v -short ./...
-      - id: import-gpg
-        name: Import GPG key
+          go-version-file: go.mod
+          cache: true
+      - name: Install cosign
         if: ${{ success() }}
-        uses: hashicorp/ghaction-import-gpg@v2.1.0
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        uses: sigstore/cosign-installer@v2.5.1
+      - name: Install syft
+        if: ${{ success() }}
+        uses: anchore/sbom-action/download-syft@v0.12.0
       - id: docker-login
         name: Login to Docker hub
         if: ${{ success() }}
@@ -49,8 +48,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - id: goreleaser
-        name: Run GoReleaser
+      - name: Run GoReleaser
         if: ${{ success() }}
         uses: goreleaser/goreleaser-action@v3
         with:
@@ -59,4 +57,11 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_FINGERPRINT: ${{ steps.import-gpg.outputs.fingerprint }}
+      - name: Trigger Go Report update
+        if: ${{ success() }}
+        uses: fjogeleit/http-request-action@v1.11.0
+        with:
+          url: 'https://goreportcard.com/checks'
+          method: 'POST'
+          contentType: 'application/x-www-form-urlencoded'
+          data: 'repo=github.com/${{ github.repository }}'
