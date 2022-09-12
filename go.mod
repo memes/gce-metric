@@ -12,7 +12,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.5.0
-	github.com/spf13/viper v1.12.0
+	github.com/spf13/viper v1.13.0
 	google.golang.org/api v0.94.0
 	google.golang.org/genproto v0.0.0-20220902135211-223410557253
 	google.golang.org/protobuf v1.28.1
