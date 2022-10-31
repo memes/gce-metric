@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cloud.google.com/go/compute v1.10.0
-	cloud.google.com/go/monitoring v1.6.0
+	cloud.google.com/go/monitoring v1.7.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/stdr v1.2.2
 	github.com/go-logr/zerologr v1.2.2
