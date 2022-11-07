@@ -3,7 +3,7 @@ module github.com/memes/gce-metric
 go 1.19
 
 require (
-	cloud.google.com/go/compute v1.10.0
+	cloud.google.com/go/compute/metadata v0.2.1
 	cloud.google.com/go/monitoring v1.6.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/stdr v1.2.2
@@ -13,12 +13,13 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
-	google.golang.org/api v0.100.0
+	google.golang.org/api v0.102.0
 	google.golang.org/genproto v0.0.0-20221024183307-1bc688fe9f3e
 	google.golang.org/protobuf v1.28.1
 )
 
 require (
+	cloud.google.com/go/compute v1.12.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
