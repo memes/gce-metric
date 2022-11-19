@@ -4,9 +4,9 @@ import (
 	"errors"
 	"math"
 
+	"cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"github.com/memes/gce-metric/pkg/generators"
 	monitoredrespb "google.golang.org/genproto/googleapis/api/monitoredres"
-	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

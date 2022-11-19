@@ -5,7 +5,7 @@ fileignoreconfig:
 - filename: .github/workflows/release.yml
   checksum: 44473e9500041150b7e73fa84399901c5a4ad27f07a5899e57c0bc53d1358de9
 - filename: go.sum
-  checksum: 56c54e3568f9c5718579530b7d32f10ff076b088bd25500cc2d6d72451cc4923
+  checksum: 972266dbb7a55ed971aa80f973d35bd232c02e7ebd644660f3925e5d7d17397d
 - filename: cmd/gce-metric/generators.go
   checksum: 228d24518b8b3c10b9bc7029054039566fff97e9c68b0a9d36b091466c7d2ae2
 - filename: pkg/pipeline/pipeline.go

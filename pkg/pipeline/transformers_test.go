@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"github.com/memes/gce-metric/pkg/generators"
 	"github.com/memes/gce-metric/pkg/pipeline"
 	metricpb "google.golang.org/genproto/googleapis/api/metric"
 	monitoredrespb "google.golang.org/genproto/googleapis/api/monitoredres"
-	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
