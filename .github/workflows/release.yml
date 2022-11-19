@@ -65,3 +65,4 @@ jobs:
           method: 'POST'
           contentType: 'application/x-www-form-urlencoded'
           data: 'repo=github.com/${{ github.repository }}'
+          preventFailureOnNoResponse: 'true'
