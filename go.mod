@@ -3,7 +3,7 @@ module github.com/memes/gce-metric
 go 1.19
 
 require (
-	cloud.google.com/go/compute/metadata v0.2.1
+	cloud.google.com/go/compute/metadata v0.2.2
 	cloud.google.com/go/monitoring v1.9.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/stdr v1.2.2
