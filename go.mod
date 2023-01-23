@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cloud.google.com/go/compute/metadata v0.2.3
-	cloud.google.com/go/monitoring v1.9.1
+	cloud.google.com/go/monitoring v1.12.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/stdr v1.2.2
 	github.com/go-logr/zerologr v1.2.2
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	google.golang.org/api v0.107.0
-	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef
+	google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9
 	google.golang.org/protobuf v1.28.1
 )
 
