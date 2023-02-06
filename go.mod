@@ -13,7 +13,7 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
-	google.golang.org/api v0.108.0
+	google.golang.org/api v0.109.0
 	google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9
 	google.golang.org/protobuf v1.28.1
 )
