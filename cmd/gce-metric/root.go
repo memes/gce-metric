@@ -37,7 +37,7 @@ func NewRootCmd() (*cobra.Command, error) {
 	}
 	rootCmd.PersistentFlags().Count(VerboseFlagName, "Enable verbose logging; can be repeated to increase verbosity")
 	rootCmd.PersistentFlags().Bool(PrettyFlagName, false, "Disables structured JSON logging to stdout, making it easier to read")
-	rootCmd.PersistentFlags().String(ProjectIDFlagName, "", "the GCP project id to use; specify if not running on GCE or to override project id")
+	rootCmd.PersistentFlags().String(ProjectIDFlagName, "", "The GCP project id to use; specify if not running on GCE or to override project id")
 	if err := viper.BindPFlag(VerboseFlagName, rootCmd.PersistentFlags().Lookup(VerboseFlagName)); err != nil {
 		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", VerboseFlagName, err)
 	}
@@ -65,7 +65,7 @@ func NewRootCmd() (*cobra.Command, error) {
 // appropriate zerolog will be assigned as the default logr sink.
 func initConfig() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
-	zl := zerolog.New(os.Stderr).With().Caller().Timestamp().Logger()
+	zl := zerolog.New(os.Stdout).With().Caller().Timestamp().Logger()
 	viper.AddConfigPath(".")
 	if home, err := homedir.Dir(); err == nil {
 		viper.AddConfigPath(home)
@@ -87,7 +87,7 @@ func initConfig() {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	}
 	if viper.GetBool(PrettyFlagName) {
-		zl = zl.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		zl = zl.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	}
 	logger = zerologr.New(&zl)
 	if err == nil {
