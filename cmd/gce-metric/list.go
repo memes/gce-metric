@@ -30,7 +30,7 @@ func newListCommand() (*cobra.Command, error) {
 	return listCmd, nil
 }
 
-func listMain(cmd *cobra.Command, _ []string) error {
+func listMain(_ *cobra.Command, _ []string) error {
 	logger.V(0).Info("Preparing list client")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

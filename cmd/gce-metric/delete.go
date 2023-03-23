@@ -24,7 +24,7 @@ NOTE: This command can delete any metric given, including built-in Google Cloud 
 	return deleteCmd
 }
 
-func deleteMetrics(cmd *cobra.Command, args []string) error {
+func deleteMetrics(_ *cobra.Command, args []string) error {
 	logger.V(0).Info("Preparing delete client")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
