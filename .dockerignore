@@ -1,8 +1,3 @@
 # Ignore everything by default
 *
 .*
-
-# Allow these go files to be processed by Docker
-!go.mod
-!go.sum
-!main.go

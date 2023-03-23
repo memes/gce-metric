@@ -5,36 +5,44 @@ name: release
 # yamllint disable-line rule:truthy
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - main
 
 permissions:
   contents: write
+  pull-requests: write
   packages: write
   id-token: write
 
 jobs:
-  goreleaser:
+  release:
     runs-on: ubuntu-latest
     steps:
+      - name: Release Please
+        uses: GoogleCloudPlatform/release-please-action@v3.7.5
+        with:
+          release-type: go
+          package-name: gce-metric
       - name: Checkout source
         uses: actions/checkout@v3
+        if: ${{ steps.release.outputs.release_created }}
         with:
           fetch-depth: 0
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
+        if: ${{ steps.release.outputs.release_created }}
         with:
           go-version-file: go.mod
           cache: true
       - name: Install cosign
-        if: ${{ success() }}
-        uses: sigstore/cosign-installer@v2.8.1
+        if: ${{ steps.release.outputs.release_created && success() }}
+        uses: sigstore/cosign-installer@v3.0.1
       - name: Install syft
-        if: ${{ success() }}
-        uses: anchore/sbom-action/download-syft@v0.13.1
+        if: ${{ steps.release.outputs.release_created && success() }}
+        uses: anchore/sbom-action/download-syft@v0.13.3
       - id: docker-login
         name: Login to Docker hub
-        if: ${{ success() }}
+        if: ${{ steps.release.outputs.release_created && success() }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -42,14 +50,14 @@ jobs:
           logout: true
       - id: ghcr-login
         name: Login to GitHub Container Registry
-        if: ${{ success() }}
+        if: ${{ steps.release.outputs.release_created && success() }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
-        if: ${{ success() }}
+        if: ${{ steps.release.outputs.release_created && success() }}
         uses: goreleaser/goreleaser-action@v4
         with:
           distribution: goreleaser
@@ -59,7 +67,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trigger Go Report update
         if: ${{ success() }}
-        uses: fjogeleit/http-request-action@v1.12.0
+        uses: fjogeleit/http-request-action@v1.14.0
         with:
           url: 'https://goreportcard.com/checks'
           method: 'POST'

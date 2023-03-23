@@ -56,10 +56,7 @@ signs:
 snapshot:
   name_template: "{{ incpatch .Tag }}-next"
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^[Cc]hore:'
+  skip: true
 dockers:
   - goos: linux
     goarch: amd64

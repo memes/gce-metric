@@ -131,7 +131,7 @@ linters-settings:
       - paramTypeCombine
       - ptrToRefParam
       - typeUnparen
-      # - unnamedResult
+      - unnamedResult
       - unnecessaryBlock
   nolintlint:
     allow-unused: false
