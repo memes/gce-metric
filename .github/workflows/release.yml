@@ -66,7 +66,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trigger Go Report update
-        if: ${{ success() }}
+        if: ${{ steps.release.outputs.release_created && success() }}
         uses: fjogeleit/http-request-action@v1.14.0
         with:
           url: 'https://goreportcard.com/checks'
