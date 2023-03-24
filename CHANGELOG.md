@@ -7,6 +7,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2](https://github.com/memes/gce-metric/compare/v1.2.1...v1.2.2) (2023-03-24)
+
+
+### Bug Fixes
+
+* Release-please and GoReleaser updates ([9057933](https://github.com/memes/gce-metric/commit/9057933c0ed97ead340a5a7b90e1128b1535fc8c))
+
 ## [1.2.1](https://github.com/memes/gce-metric/compare/1.2.0-rc1...v1.2.1) (2023-03-24)
 
 
