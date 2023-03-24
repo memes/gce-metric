@@ -65,6 +65,7 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ steps.release.outputs.tag_name }}
       - name: Trigger Go Report update
         if: ${{ steps.release.outputs.release_created && success() }}
         uses: fjogeleit/http-request-action@v1.14.0
