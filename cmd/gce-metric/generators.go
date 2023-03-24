@@ -126,6 +126,8 @@ func generatorMain(cmd *cobra.Command, args []string) error {
 	logger.V(0).Info("Building synthetic metric generator pipeline")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	// Create the timestamped value generator
 	periodicGenerator, reader, err := generators.NewPeriodicGenerator(
@@ -173,17 +175,7 @@ func generatorMain(cmd *cobra.Command, args []string) error {
 	logger.V(1).Info("Launching periodic generator")
 	go periodicGenerator(ctx, ticker.C)
 	logger.V(1).Info("Goroutines launched, waiting for processing to be interrupted")
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-	select {
-	case <-ctx.Done():
-		logger.V(1).Info("Context has been canceled, stopping ticker")
-		ticker.Stop()
-
-	case sig := <-interrupt:
-		logger.V(1).Info("Interrupt received, stopping ticker and canceling context", "sig", sig)
-		ticker.Stop()
-		cancel()
-	}
+	<-ctx.Done()
+	logger.V(1).Info("Context has been cancelled")
 	return nil
 }
