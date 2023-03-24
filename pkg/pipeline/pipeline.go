@@ -65,6 +65,7 @@ func (p *Pipeline) Close() error {
 }
 
 func (p *Pipeline) BuildRequest(metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
+	p.logger.V(2).Info("Building request", "metric", metric)
 	req := &monitoringpb.CreateTimeSeriesRequest{
 		Name: "projects/" + p.projectID,
 		TimeSeries: []*monitoringpb.TimeSeries{
@@ -125,12 +126,14 @@ func WithTransformers(transformers []Transformer) Option {
 func WithDefaultEmitter() Option {
 	return func(p *Pipeline) error {
 		p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
+			p.logger.V(2).Info("Emitting time-series request to GCP")
 			if err := p.client.CreateTimeSeries(ctx, req); err != nil {
 				return fmt.Errorf("failure sending create time-series request: %w", err)
 			}
 			return nil
 		}
 		p.closer = func() error {
+			p.logger.V(2).Info("Closing time-series emitter")
 			if p.client == nil {
 				return nil
 			}
@@ -146,12 +149,14 @@ func WithDefaultEmitter() Option {
 func WithWriterEmitter(writer io.Writer) Option {
 	return func(p *Pipeline) error {
 		p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
+			p.logger.V(2).Info("Emitting time-series request to writer")
 			if _, err := fmt.Fprintf(writer, "%s\n", prototext.Format(req)); err != nil {
 				return fmt.Errorf("failure writing time-series request: %w", err)
 			}
 			return nil
 		}
 		p.closer = func() error {
+			p.logger.V(2).Info("Closing time-series writer emitter")
 			return nil
 		}
 		return nil
@@ -205,8 +210,10 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 }
 
 func (p *Pipeline) defaultTransformers(_ context.Context) ([]Transformer, error) {
+	p.logger.V(1).Info("Collecting default transformers")
 	transformers := []Transformer{}
 	if p.onGCE() {
+		p.logger.V(2).Info("Detected we're running on GCE")
 		instanceID, err := p.metadataClient.InstanceID()
 		if err != nil {
 			return nil, fmt.Errorf("failure getting instance identifier from metadata client: %w", err)
@@ -215,19 +222,24 @@ func (p *Pipeline) defaultTransformers(_ context.Context) ([]Transformer, error)
 		if err != nil {
 			return nil, fmt.Errorf("failure getting zone from metadata client: %w", err)
 		}
+		p.logger.V(2).Info("Retrieved GCE metadata", "instanceID", instanceID, "zone", zone)
 		if os.Getenv("KUBERNETES_SERVICE_HOST") != "" {
 			// Use a transformer that add a gke_container resource type to
 			// the request.
+			p.logger.V(2).Info("Looks like GKE", "instanceID", instanceID, "zone", zone)
 			clusterName, err := p.metadataClient.InstanceAttributeValue("cluster_name")
 			if err != nil {
 				return nil, fmt.Errorf("failure getting 'cluster_name' attribute from metadataClient: %w", err)
 			}
+			p.logger.V(2).Info("Adding GKE transformer to pipeline", "instanceID", instanceID, "zone", zone, "clusterName", clusterName)
 			transformers = append(transformers, NewGKEMonitoredResourceTransformer(p.projectID, clusterName, os.Getenv("NAMESPACE"), instanceID, os.Getenv("HOSTNAME"), os.Getenv("CONTAINER_NAME"), zone))
 		} else {
-			//
+			p.logger.V(2).Info("Adding GCE transformer to pipeline", "instanceID", instanceID, "zone", zone)
+			// Use a GCE transformer
 			transformers = append(transformers, NewGCEMonitoredResourceTransformer(p.projectID, instanceID, zone))
 		}
 	} else {
+		p.logger.V(2).Info("GCE not detected, adding generic_node transformer to pipeline")
 		// Use a transformer that adds a generic_node resource type to
 		// the request.
 		transformers = append(transformers, NewGenericMonitoredResourceTransformer(p.projectID, DefaultLocation, DefaultNamespace, uuid.New().String()))
@@ -238,6 +250,7 @@ func (p *Pipeline) defaultTransformers(_ context.Context) ([]Transformer, error)
 
 func (p *Pipeline) Processor() Processor {
 	return func(ctx context.Context, input <-chan generators.Metric) error {
+		p.logger.V(2).Info("Launching pipeline processor")
 		for {
 			select {
 			case <-ctx.Done():
