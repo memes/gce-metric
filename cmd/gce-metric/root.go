@@ -32,12 +32,12 @@ func NewRootCmd() (*cobra.Command, error) {
 	rootCmd := &cobra.Command{
 		Use:     AppName,
 		Version: version,
-		Short:   "",
-		Long:    `Generates synthetic gauge metrics compatible with Google Cloud Monitoring..`,
+		Short:   "Generate synthetic gauge metrics for Google Cloud Monitoring",
+		Long:    `Generate synthetic gauge metrics compatible with Google Cloud Monitoring that follow a cyclic pattern, with values calculated using a range you specify.`,
 	}
-	rootCmd.PersistentFlags().Count(VerboseFlagName, "Enable verbose logging; can be repeated to increase verbosity")
-	rootCmd.PersistentFlags().Bool(PrettyFlagName, false, "Disables structured JSON logging to stdout, making it easier to read")
-	rootCmd.PersistentFlags().String(ProjectIDFlagName, "", "The GCP project id to use; specify if not running on GCE or to override project id")
+	rootCmd.PersistentFlags().Count(VerboseFlagName, "enable verbose logging; can be repeated to increase verbosity")
+	rootCmd.PersistentFlags().Bool(PrettyFlagName, false, "disables structured JSON logging to stdout, making it easier to read")
+	rootCmd.PersistentFlags().String(ProjectIDFlagName, "", "the GCP project id to use; specify if not running on GCE or to override detected project id")
 	if err := viper.BindPFlag(VerboseFlagName, rootCmd.PersistentFlags().Lookup(VerboseFlagName)); err != nil {
 		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", VerboseFlagName, err)
 	}
@@ -103,7 +103,7 @@ func effectiveProjectID() (string, error) {
 	logger.V(1).Info("Determining project identifier to use")
 	projectID := viper.GetString(ProjectIDFlagName)
 	if projectID != "" {
-		logger.V(2).Info("Returning project id from command args", "projectID", projectID)
+		logger.V(2).Info("Returning project id from viper", "projectID", projectID)
 		return projectID, nil
 	}
 	if !metadata.OnGCE() {

@@ -12,12 +12,12 @@ import (
 
 func newDeleteCommand() *cobra.Command {
 	deleteCmd := &cobra.Command{
-		Use:   "delete [flags] metric-name ...",
-		Short: "Delete time-series metric(s)",
+		Use:   "delete [--verbose] [--pretty] [--project ID] NAME ...",
+		Short: "Delete the named time-series metrics.",
 		Long: `Delete Google Cloud time-series metrics from a GCP project. One or more fully-qualified metric names (e.g. "custom.googleapis.com/my-metric") must be provided, and each will be deleted in turn.
 
-NOTE: This command can delete any metric given, including built-in Google Cloud metrics, provided the caller has the correct permissions.`,
-		Example: "gce-metric delete --verbose --project my-google-project custom.googleapis.com/my-metric",
+NOTE: This command can delete any metric given, including built-in Google Cloud metrics, provided the caller has the appropriate permissions.`,
+		Example: AppName + "delete --verbose --project ID custom.googleapis.com/my-metric",
 		RunE:    deleteMetrics,
 		Args:    cobra.MinimumNArgs(1),
 	}

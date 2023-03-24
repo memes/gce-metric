@@ -17,10 +17,10 @@ const FilterFlagName = "filter"
 
 func newListCommand() (*cobra.Command, error) {
 	listCmd := &cobra.Command{
-		Use:     "list",
-		Short:   "List custom metric time-series that match a filter",
-		Long:    "list long",
-		Example: "list example",
+		Use:     "list [--verbose] [--project ID] [--filter FILTER]",
+		Short:   "List Google Cloud time-series metrics that match the filter",
+		Long:    "List any Google Cloud time-series metrics that match the filter, including those reserved for Google Cloud use. The default filter will match any time-series with the prefix name 'custom.googleapis.com', which is the recommended prefix for custom metrics.",
+		Example: AppName + `list --project ID --filter 'metric.type = has_substring("my-resource")'`,
 		RunE:    listMain,
 	}
 	listCmd.PersistentFlags().String(FilterFlagName, "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")

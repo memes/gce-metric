@@ -15,23 +15,20 @@ import (
 )
 
 const (
-	SampleFlagName         = "sample"
-	PeriodFlagName         = "period"
-	FloorFlagName          = "floor"
-	CeilingFlagName        = "ceiling"
-	IntegerFlagName        = "integer"
-	MetricLabelsFlagName   = "metric-labels"
-	ResourceLabelsFlagName = "resource-labels"
-	ResourceTypeFlagName   = "resource-type"
-	DryRunFlagName         = "dry-run"
+	SampleFlagName  = "sample"
+	PeriodFlagName  = "period"
+	FloorFlagName   = "floor"
+	CeilingFlagName = "ceiling"
+	IntegerFlagName = "integer"
+	DryRunFlagName  = "dry-run"
 )
 
 func newSawtoothCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "sawtooth",
+		Use:     "sawtooth [flags] NAME",
 		Short:   "Generate synthetic metrics from a sawtooth function",
-		Long:    "",
-		Example: "sawtooth foo",
+		Long:    "Generate synthetic metric time-series data-points that approximate a sawtooth pattern, and send them to Google Cloud Monitoring to trigger scaling events or for other purposes.",
+		Example: AppName + "sawtooth --project ID custom.googleapis.com/syntheticScaler/cpu",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
@@ -42,10 +39,10 @@ func newSawtoothCommand() *cobra.Command {
 
 func newSineCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "sine",
+		Use:     "sine [flags] NAME",
 		Short:   "Generate synthetic metrics from a sine function",
-		Long:    "",
-		Example: "sine foo",
+		Long:    "Generate synthetic metric time-series data-points that approximate a sine pattern, and send them to Google Cloud Monitoring to trigger scaling events or for other purposes.",
+		Example: AppName + "sine --project ID custom.googleapis.com/syntheticScaler/cpu",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
@@ -56,10 +53,10 @@ func newSineCommand() *cobra.Command {
 
 func newSquareCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "square",
+		Use:     "square [flags] NAME",
 		Short:   "Generate synthetic metrics from a square function",
-		Long:    "",
-		Example: "square foo",
+		Long:    "Generate synthetic metric time-series data-points that approximate a square pattern, and send them to Google Cloud Monitoring to trigger scaling events or for other purposes.",
+		Example: AppName + "square --project ID custom.googleapis.com/syntheticScaler/cpu",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
@@ -70,10 +67,10 @@ func newSquareCommand() *cobra.Command {
 
 func newTriangleCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "triangle",
+		Use:     "triangle [flags] NAME",
 		Short:   "Generate synthetic metrics from a triangle function",
-		Long:    "",
-		Example: "triangle foo",
+		Long:    "Generate synthetic metric time-series data-points that approximate a triangle pattern, and send them to Google Cloud Monitoring to trigger scaling events or for other purposes.",
+		Example: AppName + "triangle --project ID custom.googleapis.com/syntheticScaler/cpu",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
@@ -83,15 +80,12 @@ func newTriangleCommand() *cobra.Command {
 }
 
 func addGeneratorFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().Duration(SampleFlagName, 60*time.Second, "sample time, specified in Go duration format. Default value is 60s")
-	cmd.PersistentFlags().Duration(PeriodFlagName, 10*time.Minute, "the period of the underlying wave function; e.g. the time for a complete cycle from floor to ceiling and back.")
-	cmd.PersistentFlags().Float64(FloorFlagName, 1.0, "the lowest value to send to metric; e.g. '1.0'")
-	cmd.PersistentFlags().Float64(CeilingFlagName, 10.0, "the maximum value to send to metics; e.g. '10.0'")
-	cmd.PersistentFlags().Bool(IntegerFlagName, false, "Round metric value to nearest integer")
-	cmd.PersistentFlags().StringToString(MetricLabelsFlagName, nil, "a set of metric label key=value pairs to send, separated by commas. E.g. --metric-labels=name=test,foo=bar")
-	cmd.PersistentFlags().StringToString(ResourceLabelsFlagName, nil, "a set of resource label key=value pairs to send, separated by commas. E.g. --resource-labels=name=test,foo=bar")
-	cmd.PersistentFlags().String(ResourceTypeFlagName, "", "TODO")
-	cmd.PersistentFlags().Bool(DryRunFlagName, false, "Write metrics to stdout instead of to Google Cloud Monitoring")
+	cmd.PersistentFlags().Duration(SampleFlagName, 60*time.Second, "sets the interval between sending metrics to Google Monitoring, must be valid Go duration string")
+	cmd.PersistentFlags().Duration(PeriodFlagName, 10*time.Minute, "sets the duration for one complete cycle from floor to ceiling, must be valid Go duration string")
+	cmd.PersistentFlags().Float64(FloorFlagName, 1.0, "sets the minimum value for the cycles, can be an integer or floating point value")
+	cmd.PersistentFlags().Float64(CeilingFlagName, 10.0, "sets the maximum value for the cycles, can be an integer of floating point value")
+	cmd.PersistentFlags().Bool(IntegerFlagName, false, "forces the generated metrics to be integers, making them less smooth and more step-like")
+	cmd.PersistentFlags().Bool(DryRunFlagName, false, "report metrics to stdout for review, without sending to Google Cloud Monitoring; for the curious!")
 }
 
 func bindViperFlags(cmd *cobra.Command, _ []string) error {
@@ -109,15 +103,6 @@ func bindViperFlags(cmd *cobra.Command, _ []string) error {
 	}
 	if err := viper.BindPFlag(IntegerFlagName, cmd.PersistentFlags().Lookup(IntegerFlagName)); err != nil {
 		return fmt.Errorf("failed to bind '%s' pflag: %w", IntegerFlagName, err)
-	}
-	if err := viper.BindPFlag(MetricLabelsFlagName, cmd.PersistentFlags().Lookup(MetricLabelsFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", MetricLabelsFlagName, err)
-	}
-	if err := viper.BindPFlag(ResourceLabelsFlagName, cmd.PersistentFlags().Lookup(ResourceLabelsFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", ResourceLabelsFlagName, err)
-	}
-	if err := viper.BindPFlag(ResourceTypeFlagName, cmd.PersistentFlags().Lookup(ResourceTypeFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", ResourceTypeFlagName, err)
 	}
 	if err := viper.BindPFlag(DryRunFlagName, cmd.PersistentFlags().Lookup(DryRunFlagName)); err != nil {
 		return fmt.Errorf("failed to bind '%s' pflag: %w", DryRunFlagName, err)
