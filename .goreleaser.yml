@@ -54,6 +54,7 @@ signs:
       - --output-signature
       - '${signature}'
       - '${artifact}'
+      - '--yes'
     output: true
 snapshot:
   name_template: "{{ incpatch .Tag }}-next"
@@ -97,6 +98,7 @@ docker_signs:
     args:
       - sign
       - '${artifact}'
+      - '--yes'
 release:
   draft: false
   prerelease: auto
