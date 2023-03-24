@@ -1,11 +1,13 @@
 {
     "cSpell.words": [
         "apiv3",
+        "autoscaler",
         "DOCKERHUB",
         "dupl",
         "fileignoreconfig",
         "genproto",
         "goarch",
+        "GOBIN",
         "golangci",
         "gomod",
         "googleapis",
@@ -28,6 +30,7 @@
         "prototext",
         "SBOM",
         "stdr",
+        "syft",
         "timestamppb",
         "trimpath",
         "wontfix",
