@@ -8,10 +8,9 @@
 
 A synthetic metric generator for Google Cloud that will create a time-series of
 artificial metrics that can be consumed by an autoscaler, or other metric-bound
-resource. By default, the application will automatically try to generate a time-series
-with labels that match those automatically generated for [gce_instance] or
-[gke_container] metrics if an appropriate Google Cloud environment is detected.with fallback to
-[generic_node] metrics.
+resource. The application will automatically generate a time-series
+with labels appropriate for [gce_instance] or [gke_container] metrics, if detected,
+with fallback to [generic_node] metrics.
 
 ## Usage
 
@@ -21,7 +20,7 @@ The application has three-forms of operation; *generator*, *list*, and *delete*.
 
 <!-- spell-checker: disable -->
 ```shell
-gce-metric waveform [FLAGS] NAME
+gce-metric waveform [flags] NAME
 ```
 <!-- spell-checker: enable -->
 
@@ -63,18 +62,7 @@ authenticated to GCP and authorised to create metric time-series.
   series, respectively.
 -->
 
-#### Example
-
-To generate synthetic metrics called `custom.googleapis.com/custom_metric` that
-start at 0 and rise to 10 in a sawtooth pattern each hour
-
-<!-- spell-checker: disable -->
-```shell
-gce-metric sawtooth --floor 0 --ceiling 10 --period 1h custom.googleapis.com/custom_metric
-```
-<!-- spell-checker: enable -->
-
-#### Sawtooth in Metrics Explorer
+#### Example: Sawtooth
 
 ![Sawtooth metric in Metrics Explorer](images/sawtooth.png)
 
@@ -84,7 +72,7 @@ gce-metric sawtooth --floor 0 --ceiling 100 --period 20m --sample 30s custom.goo
 ```
 <!-- spell-checker: enable -->
 
-#### Sine in Metrics Explorer
+#### Example: Sine
 
 ![Sine metric in Metrics Explorer](images/sine.png)
 
@@ -94,7 +82,7 @@ gce-metric sine --floor 0 --ceiling 100 --period 20m --sample 30s custom.googlea
 ```
 <!-- spell-checker: enable -->
 
-#### Square in Metrics Explorer
+#### Example: Square
 
 ![Square metric in Metrics Explorer](images/square.png)
 
@@ -104,7 +92,7 @@ gce-metric square --floor 0 --ceiling 100 --period 20m --sample 30s custom.googl
 ```
 <!-- spell-checker: enable -->
 
-#### Triangle in Metrics Explorer
+#### Example: Triangle
 
 ![Triangle metric in Metrics Explorer](images/triangle.png)
 
