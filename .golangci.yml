@@ -60,6 +60,31 @@ linters:
     - whitespace
     - wrapcheck
 linters-settings:
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+          - "!$test"
+        allow:
+          - $gostd
+          - github.com/memes
+          - cloud.google.com
+          - github.com/go-logr
+          - github.com/google/uuid
+          - github.com/mitchellh/go-homedir
+          - github.com/spf13/cobra
+          - github.com/spf13/viper
+          - github.com/rs/zerolog
+      test:
+        files:
+          - $test
+        allow:
+          - $gostd
+          - github.com/memes
+          - cloud.google.com
+          - github.com/go-logr
+          - github.com/google/uuid
   errcheck:
     check-type-assertions: true
     check-blank: true
