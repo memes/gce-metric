@@ -150,7 +150,7 @@ E.g.
 <!-- spell-checker: disable -->
 ```shell
 podman run -d --rm --name gce-metric \
-   ghcr.io/memes/gce-metric:1.2.1 \
+   ghcr.io/memes/gce-metric:v1.2.3 \
    sawtooth -period 1h -sample 2m
 ```
 <!-- spell-checker: enable -->
@@ -167,9 +167,9 @@ a signing certificate for download and verification of container images.
 
    <!-- spell-checker: disable -->
    ```shell
-   curl -sLO https://github.com/memes/gce-metric/releases/download/1.2.0/gce-metric_1.2.1_SHA256SUMS
-   curl -sLO https://github.com/memes/gce-metric/releases/download/1.2.0/gce-metric_1.2.1_SHA256SUMS.sig
-   curl -sLO https://github.com/memes/gce-metric/releases/download/1.2.0/gce-metric_1.2.1_SHA256SUMS.pem
+   curl -sLO https://github.com/memes/gce-metric/releases/download/v1.2.3/gce-metric_1.2.3_SHA256SUMS
+   curl -sLO https://github.com/memes/gce-metric/releases/download/v1.2.3/gce-metric_1.2.3_SHA256SUMS.sig
+   curl -sLO https://github.com/memes/gce-metric/releases/download/v1.2.3/gce-metric_1.2.3_SHA256SUMS.pem
    ```
    <!-- spell-checker: enable -->
 
@@ -178,9 +178,9 @@ a signing certificate for download and verification of container images.
    <!-- spell-checker: disable -->
    ```shell
    cosign verify-blob \
-      --cert gce-metric_1.2.1_SHA256SUMS.pem \
-      --signature gce-metric_1.2.1_SHA256SUMS.sig \
-      gce-metric_1.2.1_SHA256SUMS
+      --cert gce-metric_1.2.3_SHA256SUMS.pem \
+      --signature gce-metric_1.2.3_SHA256SUMS.sig \
+      gce-metric_1.2.3_SHA256SUMS
    ```
 
    ```text
@@ -197,14 +197,14 @@ a signing certificate for download and verification of container images.
 
    <!-- spell-checker: disable -->
    ```shell
-   curl -sLO https://github.com/memes/gce-metric/releases/download/1.2.1/gce-metric-1.2.1.tar.gz.sbom
-   curl -sLO https://github.com/memes/gce-metric/releases/download/1.2.1/gce-metric_1.2.1_linux_amd64
-   sha256sum --ignore-missing -c gce-metric_1.2.1_SHA256SUMS
+   curl -sLO https://github.com/memes/gce-metric/releases/download/v1.2.3/gce-metric-1.2.3.tar.gz.sbom
+   curl -sLO https://github.com/memes/gce-metric/releases/download/v1.2.3/gce-metric_1.2.3_linux_amd64
+   sha256sum --ignore-missing -c gce-metric_1.2.3_SHA256SUMS
    ```
 
    ```text
-   gce-metric-1.2.1.tar.gz.sbom: OK
-   gce-metric_1.2.1_linux_amd64: OK
+   gce-metric-1.2.3.tar.gz.sbom: OK
+   gce-metric_1.2.3_linux_amd64: OK
    ```
    <!-- spell-checker: enable -->
 
@@ -214,7 +214,7 @@ Use [cosign]s experimental OCI signature support to validate the container.
 
 <!-- spell-checker: disable -->
 ```shell
-COSIGN_EXPERIMENTAL=1 cosign verify ghcr.io/memes/gce-metric:1.2.1
+COSIGN_EXPERIMENTAL=1 cosign verify ghcr.io/memes/gce-metric:1.2.3
 ```
 <!-- spell-checker: enable -->
 
