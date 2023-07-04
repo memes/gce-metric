@@ -110,6 +110,7 @@ func bindViperFlags(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
+//nolint:funlen // Setup of options makes the function seem long
 func generatorMain(cmd *cobra.Command, args []string) error {
 	periodicType, err := generators.ParsePeriodicType(cmd.CalledAs())
 	if err != nil {

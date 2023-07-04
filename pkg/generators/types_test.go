@@ -377,6 +377,7 @@ func TestTrianglePeriodicGenerator(t *testing.T) {
 	}
 }
 
+//nolint:funlen // The tests table makes the function longer seem longer to linter
 func TestPeriodicRangeGenerator(t *testing.T) {
 	low := 10.0
 	high := 20.0

@@ -39,10 +39,10 @@ func listMain(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	req := monitoringpb.ListMetricDescriptorsRequest{
-		Name: "projects/" + projectID,
-	}
-	if filter := viper.GetString(FilterFlagName); filter != "" {
-		req.Filter = filter
+		Name:      "projects/" + projectID,
+		Filter:    viper.GetString(FilterFlagName),
+		PageSize:  0,
+		PageToken: "",
 	}
 	client, err := monitoring.NewMetricClient(ctx)
 	if err != nil {
@@ -59,7 +59,7 @@ func listMain(_ *cobra.Command, _ []string) error {
 			return fmt.Errorf("failure getting list of metrics: %w", err)
 
 		default:
-			fmt.Println(response.Type)
+			fmt.Println(response.Type) //nolint:forbidigo // The user has requested that the names of matching metrics be printed to stdout
 		}
 	}
 }

@@ -27,14 +27,15 @@ const (
 	containerName = "test-container"
 )
 
-var timestamp = time.Now()
-
 // The NewGenericMonitoredResourceTransformer is expected to return a function
 // that inserts or replaces the Resource field of every TimeSeries in the slice
 // with a generic_node resource with expected field values. Any existing Metric
 // or Point object should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewGenericMonitoredResourceTransformer(t *testing.T) {
 	transformer := pipeline.NewGenericMonitoredResourceTransformer(project, location, namespace, node)
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest
@@ -511,8 +512,11 @@ func TestNewGenericMonitoredResourceTransformer(t *testing.T) {
 // that inserts or replaces the Resource field of every TimeSeries in the slice
 // with a gce_instance resource with expected field values. Any existing Metric
 // or Point object should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewGCEMonitoredResourceTransformer(t *testing.T) {
 	transformer := pipeline.NewGCEMonitoredResourceTransformer(project, instance, zone)
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest
@@ -983,8 +987,11 @@ func TestNewGCEMonitoredResourceTransformer(t *testing.T) {
 // that inserts or replaces the Resource field of every TimeSeries in the slice
 // with a gke_container resource with expected field values. Any existing Metric
 // or Point object should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewGKEMonitoredResourceTransformer(t *testing.T) {
 	transformer := pipeline.NewGKEMonitoredResourceTransformer(project, clusterName, namespace, instance, pod, containerName, zone)
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest
@@ -1478,8 +1485,11 @@ func TestNewGKEMonitoredResourceTransformer(t *testing.T) {
 // The DoubleTypedValueTransformer is expected to insert or replace the Points
 // field of every TimeSeries in the slice with a DoubleValue and timestamps from
 // the supplied Metric object. All other TimeSeries objects should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewDoubleTypedValueTransformer(t *testing.T) {
 	transformer := pipeline.NewDoubleTypedValueTransformer()
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest
@@ -1932,8 +1942,11 @@ func TestNewDoubleTypedValueTransformer(t *testing.T) {
 // The IntegerTypedValueTransformer is expected to insert or replace the Points
 // field of every TimeSeries in the slice with a IntegerValue and timestamps from
 // the supplied Metric object. All other TimeSeries objects should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewIntegerTypedValueTransformer(t *testing.T) {
 	transformer := pipeline.NewIntegerTypedValueTransformer()
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest
@@ -2386,8 +2399,11 @@ func TestNewIntegerTypedValueTransformer(t *testing.T) {
 // return a function that inserts or replaces the Resource field of every TimeSeries
 // in the slice with a k8s_cluster resource with expected field values. Any existing
 // Metric or Point object should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewGenericKubernetesClusterMonitoredResourceTransformer(t *testing.T) {
 	transformer := pipeline.NewGenericKubernetesClusterMonitoredResourceTransformer(project, location, clusterName)
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest
@@ -2858,8 +2874,11 @@ func TestNewGenericKubernetesClusterMonitoredResourceTransformer(t *testing.T) {
 // return a function that inserts or replaces the Resource field of every TimeSeries
 // in the slice with a k8s_container resource with expected field values. Any existing
 // Metric or Point object should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewGenericKubernetesContainerMonitoredResourceTransformer(t *testing.T) {
 	transformer := pipeline.NewGenericKubernetesContainerMonitoredResourceTransformer(project, location, clusterName, namespace, pod, containerName)
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest
@@ -3348,8 +3367,11 @@ func TestNewGenericKubernetesContainerMonitoredResourceTransformer(t *testing.T)
 // return a function that inserts or replaces the Resource field of every TimeSeries
 // in the slice with a k8s_node resource with expected field values. Any existing
 // Metric or Point object should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewGenericKubernetesNodeMonitoredResourceTransformer(t *testing.T) {
 	transformer := pipeline.NewGenericKubernetesNodeMonitoredResourceTransformer(project, location, clusterName, node)
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest
@@ -3826,8 +3848,11 @@ func TestNewGenericKubernetesNodeMonitoredResourceTransformer(t *testing.T) {
 // return a function that inserts or replaces the Resource field of every TimeSeries
 // in the slice with a k8s_pod resource with expected field values. Any existing
 // Metric or Point object should remain unchanged.
+//
+//nolint:funlen // The test cases/tables add lines to the function
 func TestNewGenericKubernetesPodMonitoredResourceTransformer(t *testing.T) {
 	transformer := pipeline.NewGenericKubernetesPodMonitoredResourceTransformer(project, location, clusterName, namespace, pod)
+	timestamp := time.Now()
 	tests := []struct {
 		name          string
 		req           *monitoringpb.CreateTimeSeriesRequest

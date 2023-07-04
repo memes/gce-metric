@@ -96,7 +96,7 @@ func TestPeriodicGeneratorTimeout(t *testing.T) {
 	}
 }
 
-func Example() {
+func Example() { //nolint:testableexamples // The output would include a timestamp
 	// Create the timestamped value generator
 	periodicGenerator, reader, err := generators.NewPeriodicGenerator(
 		generators.WithValueCalculator(generators.NewPeriodicRangeCalculator(0.0, 100.0, generators.Square)),

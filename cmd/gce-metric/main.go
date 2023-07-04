@@ -9,7 +9,7 @@ import (
 )
 
 // The default logr sink; this will be changed as command options are processed.
-var logger = logr.Discard()
+var logger = logr.Discard() //nolint:gochecknoglobals // The logger is deliberately global
 
 func main() {
 	rootCmd, err := NewRootCmd()

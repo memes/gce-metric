@@ -123,29 +123,6 @@ func WithTransformers(transformers []Transformer) Option {
 	}
 }
 
-func WithDefaultEmitter() Option {
-	return func(p *Pipeline) error {
-		p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
-			p.logger.V(2).Info("Emitting time-series request to GCP")
-			if err := p.client.CreateTimeSeries(ctx, req); err != nil {
-				return fmt.Errorf("failure sending create time-series request: %w", err)
-			}
-			return nil
-		}
-		p.closer = func() error {
-			p.logger.V(2).Info("Closing time-series emitter")
-			if p.client == nil {
-				return nil
-			}
-			if err := p.client.Close(); err != nil {
-				return fmt.Errorf("failure closing metric client: %w", err)
-			}
-			return nil
-		}
-		return nil
-	}
-}
-
 func WithWriterEmitter(writer io.Writer) Option {
 	return func(p *Pipeline) error {
 		p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
@@ -165,11 +142,17 @@ func WithWriterEmitter(writer io.Writer) Option {
 
 func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 	pipeline := &Pipeline{
-		logger:         logr.Discard(),
-		metricType:     DefaultMetricType,
-		transformers:   []Transformer{},
-		onGCE:          metadata.OnGCE,
-		metadataClient: metadata.NewClient(nil),
+		logger:                     logr.Discard(),
+		projectID:                  "",
+		metricType:                 DefaultMetricType,
+		metricLabels:               nil,
+		excludeDefaultTransformers: false,
+		transformers:               []Transformer{},
+		emitter:                    nil,
+		closer:                     nil,
+		client:                     nil,
+		onGCE:                      metadata.OnGCE,
+		metadataClient:             metadata.NewClient(nil),
 	}
 	for _, option := range options {
 		if err := option(pipeline); err != nil {
@@ -194,10 +177,10 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 		pipeline.transformers = append(defaultTransformers, pipeline.transformers...)
 	}
 	if pipeline.emitter == nil {
-		err := WithDefaultEmitter()(pipeline)
-		if err != nil {
-			return nil, err
-		}
+		pipeline.emitter = pipeline.defaultEmitter
+	}
+	if pipeline.closer == nil {
+		pipeline.closer = pipeline.defaultCloser
 	}
 	if pipeline.client == nil {
 		client, err := monitoring.NewMetricClient(ctx)
@@ -209,10 +192,29 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 	return pipeline, nil
 }
 
+func (p *Pipeline) defaultEmitter(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
+	p.logger.V(2).Info("Emitting time-series request to GCP")
+	if err := p.client.CreateTimeSeries(ctx, req); err != nil {
+		return fmt.Errorf("failure sending create time-series request: %w", err)
+	}
+	return nil
+}
+
+func (p *Pipeline) defaultCloser() error {
+	p.logger.V(2).Info("Closing time-series emitter")
+	if p.client == nil {
+		return nil
+	}
+	if err := p.client.Close(); err != nil {
+		return fmt.Errorf("failure closing metric client: %w", err)
+	}
+	return nil
+}
+
 func (p *Pipeline) defaultTransformers(_ context.Context) ([]Transformer, error) {
 	p.logger.V(1).Info("Collecting default transformers")
 	transformers := []Transformer{}
-	if p.onGCE() {
+	if p.onGCE() { //nolint:nestif // Determining the correct Google Cloud environment is a set of cascading tests
 		p.logger.V(2).Info("Detected we're running on GCE")
 		instanceID, err := p.metadataClient.InstanceID()
 		if err != nil {

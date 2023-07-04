@@ -34,69 +34,78 @@ const (
 	Triangle
 )
 
-var (
-	ErrInvalidPeriodicType = errors.New("invalid PeriodicType name")
-	typeStrings            = map[PeriodicType]string{
-		Sawtooth: "sawtooth",
-		Sine:     "sine",
-		Square:   "square",
-		Triangle: "triangle",
-	}
-	stringTypes = map[string]PeriodicType{
-		"sawtooth": Sawtooth,
-		"sine":     Sine,
-		"square":   Square,
-		"triangle": Triangle,
-	}
-	typeCalculators = map[PeriodicType]ValueCalculator{
-		Invalid: func(_ float64) float64 {
-			return 0.0
-		},
-		Sawtooth: func(phase float64) float64 {
-			return phase - math.Floor(phase)
-		},
-		Sine: func(phase float64) float64 {
-			// Shift phase by pi/2 to get a value that starts at zero
-			// instead of 0.5.
-			return 0.5 + math.Sin(math.Pi*2.0*(phase-0.25))/2.0
-		},
-		Square: func(phase float64) float64 {
-			if math.Signbit(math.Sin(math.Pi * 2.0 * phase)) {
-				return 1.0
-			}
-			return 0.0
-		},
-		Triangle: func(phase float64) float64 {
-			return math.Abs(2.0 * (phase - math.Floor(0.5+(phase))))
-		},
-	}
-)
+var ErrInvalidPeriodicType = errors.New("invalid PeriodicType name")
 
 // Returns a string identifier for the PeriodicType, or "unknown" if it is an
 // unrecognised type.
 func (pt PeriodicType) String() string {
-	if str, ok := typeStrings[pt]; ok {
-		return str
+	switch pt {
+	case Invalid:
+		return "unknown"
+	case Sawtooth:
+		return "sawtooth"
+	case Sine:
+		return "sine"
+	case Square:
+		return "square"
+	case Triangle:
+		return "triangle"
+	default:
+		return "unknown"
 	}
-	return "unknown"
 }
 
 // Returns a ValueCalculator for the PeriodicType. If the periodic type does not
 // match with a known implementation the Invalid function will be returned.
 func (pt PeriodicType) ValueCalculator() ValueCalculator {
-	if fn, ok := typeCalculators[pt]; ok {
-		return fn
+	switch pt {
+	case Invalid:
+		return func(_ float64) float64 {
+			return 0.0
+		}
+	case Sawtooth:
+		return func(phase float64) float64 {
+			return phase - math.Floor(phase)
+		}
+	case Sine:
+		return func(phase float64) float64 {
+			// Shift phase by pi/2 to get a value that starts at zero
+			// instead of 0.5.
+			return 0.5 + math.Sin(math.Pi*2.0*(phase-0.25))/2.0
+		}
+	case Square:
+		return func(phase float64) float64 {
+			if math.Signbit(math.Sin(math.Pi * 2.0 * phase)) {
+				return 1.0
+			}
+			return 0.0
+		}
+	case Triangle:
+		return func(phase float64) float64 {
+			return math.Abs(2.0 * (phase - math.Floor(0.5+(phase))))
+		}
+	default:
+		return func(_ float64) float64 {
+			return 0.0
+		}
 	}
-	return typeCalculators[Invalid]
 }
 
 // Parses and returns a PeriodicType from a supplied string. If the string does
 // not match an known type an error will be returned.
 func ParsePeriodicType(name string) (PeriodicType, error) {
-	if value, ok := stringTypes[name]; ok {
-		return value, nil
+	switch name {
+	case "sawtooth":
+		return Sawtooth, nil
+	case "sine":
+		return Sine, nil
+	case "square":
+		return Square, nil
+	case "triangle":
+		return Triangle, nil
+	default:
+		return Invalid, fmt.Errorf("error parsing %q to PeriodicType: %w", name, ErrInvalidPeriodicType)
 	}
-	return Invalid, fmt.Errorf("error parsing %q to PeriodicType: %w", name, ErrInvalidPeriodicType)
 }
 
 // Creates a new wrapped ValueCalculator from a PeriodicType that returns values

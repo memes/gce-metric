@@ -87,7 +87,10 @@ func initConfig() {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	}
 	if viper.GetBool(PrettyFlagName) {
-		zl = zl.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+		zl = zl.Output(zerolog.ConsoleWriter{
+			Out:     os.Stdout,
+			NoColor: false,
+		})
 	}
 	logger = zerologr.New(&zl)
 	if err == nil {

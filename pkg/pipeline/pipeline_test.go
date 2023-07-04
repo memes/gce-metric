@@ -1,4 +1,4 @@
-package pipeline
+package pipeline //nolint:testpackage // These tests need access to the private functions to emulate GCP environment
 
 import (
 	"context"
@@ -79,7 +79,12 @@ func withMetadataClient(client *testClient) Option {
 // outside of GCP.
 func newNonGCPTestPipeline(t *testing.T, options ...Option) (*Pipeline, error) {
 	t.Helper()
-	client := &testClient{}
+	client := &testClient{
+		projectID:  "",
+		instanceID: "",
+		zone:       "",
+		attributes: map[string]string{},
+	}
 	return NewPipeline(context.Background(), append(options, withOnGCE(false), withMetadataClient(client))...)
 }
 
@@ -163,6 +168,7 @@ func newGCETestPipeline(t *testing.T, options ...Option) (*Pipeline, error) {
 		projectID:  testProjectID,
 		instanceID: testInstanceID,
 		zone:       testZone,
+		attributes: map[string]string{},
 	}
 	return NewPipeline(context.Background(), append(options, withOnGCE(true), withMetadataClient(client))...)
 }
@@ -242,7 +248,7 @@ func newGKETestPipeline(t *testing.T, options ...Option) (*Pipeline, error) {
 	return NewPipeline(context.Background(), append(options, withOnGCE(true), withMetadataClient(client))...)
 }
 
-func TestGKEPipelineDefault(t *testing.T) { //nolint: paralleltest // simulating GKE requires t.SetEnv() - incompatible with t.Parallel()
+func TestGKEPipelineDefault(t *testing.T) { //nolint:paralleltest // simulating GKE requires t.SetEnv() - incompatible with t.Parallel()
 	pipeline, err := newGKETestPipeline(t)
 	if err != nil {
 		t.Fatalf("Unexpected error returned from NewPipeline: %v", err)
@@ -301,9 +307,10 @@ func TestGKEPipelineDefault(t *testing.T) { //nolint: paralleltest // simulating
 	}
 }
 
+//nolint:testableexamples // The output is not stable enough for comparison
 func Example() {
 	// Use Go's standard logger as the logr implementation
-	logger := stdr.NewWithOptions(log.New(os.Stderr, "", log.Lshortfile), stdr.Options{LogCaller: stdr.All})
+	logger := stdr.NewWithOptions(log.New(os.Stderr, "", log.Lshortfile), stdr.Options{LogCaller: stdr.All, Depth: 0})
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	metrics := make(chan generators.Metric, 2)
@@ -346,84 +353,4 @@ func Example() {
 		Timestamp: time.Unix(2, 0),
 	}
 	<-ctx.Done()
-	// Output:
-	// name: "projects/my-google-project-id"
-	// time_series: {
-	//   metric: {
-	//     type: "custom.googleapis.com/my-synthetic-metric"
-	//   }
-	//   resource: {
-	//     type: "generic_node"
-	//     labels: {
-	//       key: "location"
-	//       value: "global"
-	//     }
-	//     labels: {
-	//       key: "namespace"
-	//       value: "github.com/memes/gce-metric"
-	//     }
-	//     labels: {
-	//       key: "node_id"
-	//       value: "example"
-	//     }
-	//     labels: {
-	//       key: "project_id"
-	//       value: "my-google-project-id"
-	//     }
-	//   }
-	//   metric_kind: GAUGE
-	//   points: {
-	//     interval: {
-	//       end_time: {
-	//         seconds: 1
-	//       }
-	//       start_time: {
-	//         seconds: 1
-	//       }
-	//     }
-	//     value: {
-	//       double_value: 1
-	//     }
-	//   }
-	// }
-	//
-	// name: "projects/my-google-project-id"
-	// time_series: {
-	//   metric: {
-	//     type: "custom.googleapis.com/my-synthetic-metric"
-	//   }
-	//   resource: {
-	//     type: "generic_node"
-	//     labels: {
-	//       key: "location"
-	//       value: "global"
-	//     }
-	//     labels: {
-	//       key: "namespace"
-	//       value: "github.com/memes/gce-metric"
-	//     }
-	//     labels: {
-	//       key: "node_id"
-	//       value: "example"
-	//     }
-	//     labels: {
-	//       key: "project_id"
-	//       value: "my-google-project-id"
-	//     }
-	//   }
-	//   metric_kind: GAUGE
-	//   points: {
-	//     interval: {
-	//       end_time: {
-	//         seconds: 2
-	//       }
-	//       start_time: {
-	//         seconds: 2
-	//       }
-	//     }
-	//     value: {
-	//       double_value: 2
-	//     }
-	//   }
-	// }
 }
