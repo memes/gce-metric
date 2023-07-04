@@ -214,7 +214,7 @@ Use [cosign]s experimental OCI signature support to validate the container.
 
 <!-- spell-checker: disable -->
 ```shell
-COSIGN_EXPERIMENTAL=1 cosign verify ghcr.io/memes/gce-metric:1.2.3
+COSIGN_EXPERIMENTAL=1 cosign verify ghcr.io/memes/gce-metric:v1.2.3
 ```
 <!-- spell-checker: enable -->
 
