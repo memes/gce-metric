@@ -125,12 +125,14 @@ linters-settings:
     check-blank: true
   exhaustruct:
     exclude:
-      - 'cobra\.Command$'
-      - 'generators\.Metric$'
-      - 'metric\.Metric$'
-      - 'monitoringpb\.CreateTimeSeriesRequest$'
-      - 'timestamppb\.Timestamp$'
-      - 'zerolog\.ConsoleWriter$'
+      - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.CreateTimeSeriesRequest$'
+      - 'github\.com/spf13/cobra\.Command$'
+      - 'github\.com/memes/gce-metric/pkg/generators\.Metric$'
+      - 'github\.com/memes/gce-metric/pkg/generators_test\.<anonymous>$'
+      - 'github\.com/memes/gce-metric/pkg/pipeline_test\.<anonymous>$'
+      - 'github\.com/rs/zerolog.ConsoleWriter$'
+      - 'google\.golang\.org/genproto/googleapis/api/metric\.Metric$'
+      - 'google\.golang\.org/protobuf/types/known/timestamppb\.Timestamp$'
   gocritic:
     enabled-tags:
       - diagnostic
