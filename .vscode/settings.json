@@ -32,6 +32,7 @@
         "paralleltest",
         "pflag",
         "protobuf",
+        "protojson",
         "prototext",
         "SBOM",
         "stdr",

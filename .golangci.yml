@@ -126,6 +126,7 @@ linters-settings:
   exhaustruct:
     exclude:
       - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.CreateTimeSeriesRequest$'
+      - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.ListTimeSeriesRequest$'
       - 'github\.com/spf13/cobra\.Command$'
       - 'github\.com/memes/gce-metric/pkg/generators\.Metric$'
       - 'github\.com/memes/gce-metric/pkg/generators_test\.<anonymous>$'
