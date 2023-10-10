@@ -7,6 +7,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0](https://github.com/memes/gce-metric/compare/v1.2.3...v1.3.0) (2023-10-10)
+
+
+### Features
+
+* Add --json option to list command ([7fa0021](https://github.com/memes/gce-metric/commit/7fa002154a2f159ce5fa3a3e3a7a0e65dfa084f6))
+* Add data command to retrieve TimeSeries data ([62fc930](https://github.com/memes/gce-metric/commit/62fc9304f63334a1232d2495e79f0e9780dae625))
+
+
+### Bug Fixes
+
+* Log to stderr, not stdout ([aa6f3f8](https://github.com/memes/gce-metric/commit/aa6f3f81acbc70d6a0792874b758d07afe0a0fc3))
+
 ## [1.2.3](https://github.com/memes/gce-metric/compare/v1.2.2...v1.2.3) (2023-03-24)
 
 
