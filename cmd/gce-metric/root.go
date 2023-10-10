@@ -56,7 +56,11 @@ func NewRootCmd() (*cobra.Command, error) {
 	if err != nil {
 		return nil, err
 	}
-	rootCmd.AddCommand(sawtoothCmd, sineCmd, squareCmd, triangleCmd, deleteCmd, listCmd)
+	dataCmd, err := newDataCommand()
+	if err != nil {
+		return nil, err
+	}
+	rootCmd.AddCommand(sawtoothCmd, sineCmd, squareCmd, triangleCmd, deleteCmd, listCmd, dataCmd)
 	return rootCmd, nil
 }
 
