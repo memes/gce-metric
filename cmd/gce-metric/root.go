@@ -65,7 +65,7 @@ func NewRootCmd() (*cobra.Command, error) {
 // appropriate zerolog will be assigned as the default logr sink.
 func initConfig() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
-	zl := zerolog.New(os.Stdout).With().Caller().Timestamp().Logger()
+	zl := zerolog.New(os.Stderr).With().Caller().Timestamp().Logger()
 	viper.AddConfigPath(".")
 	if home, err := homedir.Dir(); err == nil {
 		viper.AddConfigPath(home)
