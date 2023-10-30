@@ -61,7 +61,7 @@ func metricData(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	req := monitoringpb.ListTimeSeriesRequest{
-		Name:   "projects/" + projectID,
+		Name:   "projects/" + projectID, //nolint:goconst // Ignore what would be a stupid const assignment
 		Filter: viper.GetString(FilterFlagName),
 		Interval: &monitoringpb.TimeInterval{
 			StartTime: startTime,

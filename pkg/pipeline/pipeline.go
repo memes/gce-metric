@@ -67,7 +67,7 @@ func (p *Pipeline) Close() error {
 func (p *Pipeline) BuildRequest(metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
 	p.logger.V(2).Info("Building request", "metric", metric)
 	req := &monitoringpb.CreateTimeSeriesRequest{
-		Name: "projects/" + p.projectID,
+		Name: "projects/" + p.projectID, //nolint:goconst // Ignore what would be a stupid const assignment
 		TimeSeries: []*monitoringpb.TimeSeries{
 			{
 				Metric: &metricpb.Metric{
