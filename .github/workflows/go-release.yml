@@ -28,7 +28,7 @@ jobs:
           cache: true
       - name: Install cosign
         if: ${{ success() }}
-        uses: sigstore/cosign-installer@v3.2.0
+        uses: sigstore/cosign-installer@v3.3.0
       - name: Install syft
         if: ${{ success() }}
         uses: anchore/sbom-action/download-syft@v0.15.1
