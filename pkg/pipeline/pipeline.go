@@ -125,7 +125,7 @@ func WithTransformers(transformers []Transformer) Option {
 
 func WithWriterEmitter(writer io.Writer) Option {
 	return func(p *Pipeline) error {
-		p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
+		p.emitter = func(_ context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
 			p.logger.V(2).Info("Emitting time-series request to writer")
 			if _, err := fmt.Fprintf(writer, "%s\n", prototext.Format(req)); err != nil {
 				return fmt.Errorf("failure writing time-series request: %w", err)
