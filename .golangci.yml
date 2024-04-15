@@ -3,10 +3,6 @@
 run:
   allow-parallel-runners: false
   concurrency: 6
-  deadline: 5m
-  issue-exit-code: 1
-  max-issues-per-linter: 0
-  max-same-issues: 0
   modules-download-mode: readonly
   tests: true
 linters:
@@ -55,7 +51,6 @@ linters:
     - importas
     - ineffassign
     - interfacebloat
-    - interfacer
     - ireturn
     - loggercheck
     # The tests have a high cyclometric complexity, disabling
@@ -145,7 +140,6 @@ linters-settings:
     max-func-lines: 1
   nolintlint:
     allow-unused: false
-    allow-leading-space: false
     allow-no-explanation: []
     require-explanation: true
     require-specific: true
@@ -164,7 +158,8 @@ issues:
   new: false
   fix: false
 output:
-  format: tab
+  formats:
+    - format: tab
   print-issued-lines: false
   print-linter-name: true
   uniq-by-line: false
