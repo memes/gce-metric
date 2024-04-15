@@ -12,6 +12,7 @@
         "goarch",
         "GOBIN",
         "gochecknoglobals",
+        "goconst",
         "golangci",
         "gomod",
         "googleapis",
