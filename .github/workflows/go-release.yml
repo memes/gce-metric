@@ -28,10 +28,10 @@ jobs:
           cache: true
       - name: Install cosign
         if: ${{ success() }}
-        uses: sigstore/cosign-installer@v3.4.0
+        uses: sigstore/cosign-installer@v3.5.0
       - name: Install syft
         if: ${{ success() }}
-        uses: anchore/sbom-action/download-syft@v0.15.9
+        uses: anchore/sbom-action/download-syft@v0.15.11
       - id: docker-login
         name: Login to Docker hub
         if: ${{ success() }}
@@ -59,7 +59,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trigger Go Report update
         if: ${{ success() }}
-        uses: fjogeleit/http-request-action@v1.15.2
+        uses: fjogeleit/http-request-action@v1.15.5
         with:
           url: 'https://goreportcard.com/checks'
           method: 'POST'
