@@ -111,10 +111,10 @@ func ParsePeriodicType(name string) (PeriodicType, error) {
 // Creates a new wrapped ValueCalculator from a PeriodicType that returns values
 // in the range a through b.
 func NewPeriodicRangeCalculator(a, b float64, periodicType PeriodicType) ValueCalculator {
-	min := math.Min(a, b)
+	minimumValue := math.Min(a, b)
 	delta := math.Abs(a - b)
 	unitCalculator := periodicType.ValueCalculator()
 	return func(phase float64) float64 {
-		return delta*unitCalculator(phase) + min
+		return delta*unitCalculator(phase) + minimumValue
 	}
 }
