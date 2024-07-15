@@ -48,7 +48,7 @@ func metricData(_ *cobra.Command, _ []string) error {
 	logger.V(0).Info("Preparing data client")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	projectID, err := effectiveProjectID()
+	projectID, err := effectiveProjectID(ctx)
 	if err != nil {
 		return err
 	}

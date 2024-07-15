@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -106,7 +107,7 @@ func initConfig() {
 	}
 }
 
-func effectiveProjectID() (string, error) {
+func effectiveProjectID(ctx context.Context) (string, error) {
 	logger.V(1).Info("Determining project identifier to use")
 	projectID := viper.GetString(ProjectIDFlagName)
 	if projectID != "" {
@@ -117,7 +118,7 @@ func effectiveProjectID() (string, error) {
 		return "", ErrFailedToDetectProjectID
 	}
 	var err error
-	if projectID, err = metadata.ProjectID(); err != nil {
+	if projectID, err = metadata.ProjectIDWithContext(ctx); err != nil {
 		return "", fmt.Errorf("failure getting project identifier from metadata: %w", err)
 	}
 	return projectID, nil
