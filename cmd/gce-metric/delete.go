@@ -28,7 +28,7 @@ func deleteMetrics(_ *cobra.Command, args []string) error {
 	logger.V(0).Info("Preparing delete client")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	projectID, err := effectiveProjectID()
+	projectID, err := effectiveProjectID(ctx)
 	if err != nil {
 		return err
 	}
