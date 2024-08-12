@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cloud.google.com/go/compute/metadata v0.5.0
-	cloud.google.com/go/monitoring v1.20.3
+	cloud.google.com/go/monitoring v1.20.4
 	github.com/go-logr/logr v1.4.2
 	github.com/go-logr/stdr v1.2.2
 	github.com/go-logr/zerologr v1.2.3
@@ -19,7 +19,7 @@ require (
 )
 
 require (
-	cloud.google.com/go/auth v0.7.3 // indirect
+	cloud.google.com/go/auth v0.8.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

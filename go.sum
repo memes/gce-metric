@@ -1,12 +1,12 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cloud.google.com/go/auth v0.7.3 h1:98Vr+5jMaCZ5NZk6e/uBgf60phTk/XN84r8QEWB9yjY=
-cloud.google.com/go/auth v0.7.3/go.mod h1:HJtWUx1P5eqjy/f6Iq5KeytNpbAcGolPhOgyop2LlzA=
+cloud.google.com/go/auth v0.8.0 h1:y8jUJLl/Fg+qNBWxP/Hox2ezJvjkrPb952PC1p0G6A4=
+cloud.google.com/go/auth v0.8.0/go.mod h1:qGVp/Y3kDRSDZ5gFD/XPUfYQ9xW1iI7q8RIRoCyBbJc=
 cloud.google.com/go/auth/oauth2adapt v0.2.3 h1:MlxF+Pd3OmSudg/b1yZ5lJwoXCEaeedAguodky1PcKI=
 cloud.google.com/go/auth/oauth2adapt v0.2.3/go.mod h1:tMQXOfZzFuNuUxOypHlQEXgdfX5cuhwU+ffUuXRJE8I=
 cloud.google.com/go/compute/metadata v0.5.0 h1:Zr0eK8JbFv6+Wi4ilXAR8FJ3wyNdpxHKJNPos6LTZOY=
 cloud.google.com/go/compute/metadata v0.5.0/go.mod h1:aHnloV2TPI38yx4s9+wAZhHykWvVCfu7hQbF+9CWoiY=
-cloud.google.com/go/monitoring v1.20.3 h1:v/7MXFxYrhXLEZ9sSfwXdlTLLB/xrU7xTyYjY5acynQ=
-cloud.google.com/go/monitoring v1.20.3/go.mod h1:GPIVIdNznIdGqEjtRKQWTLcUeRnPjZW85szouimiczU=
+cloud.google.com/go/monitoring v1.20.4 h1:zwcViK7mT9SV0kzKqLOI3spRadvsmvw/R9z1MHNeC0E=
+cloud.google.com/go/monitoring v1.20.4/go.mod h1:v7F/UcLRw15EX7xq565N7Ae5tnYEE28+Cl717aTXG4c=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
