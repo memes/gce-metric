@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2](https://github.com/memes/gce-metric/compare/v1.3.1...v1.3.2) (2024-08-27)
+
+
+### Bug Fixes
+
+* require context for effective project ID ([6bd958e](https://github.com/memes/gce-metric/commit/6bd958e57bbdeb98c5e3fdf0f2bffde16b3f96dd))
+* Update go.mod to require 1.23 ([f8416b6](https://github.com/memes/gce-metric/commit/f8416b6661d727d88fd56dbce47dd78dd3c9ff15))
+
 ## [1.3.1](https://github.com/memes/gce-metric/compare/v1.3.0...v1.3.1) (2024-04-15)
 
 
