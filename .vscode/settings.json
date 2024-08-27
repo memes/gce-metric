@@ -5,6 +5,7 @@
         "DOCKERHUB",
         "dupl",
         "exhaustruct",
+        "filecontent",
         "fileignoreconfig",
         "forbidigo",
         "funlen",
