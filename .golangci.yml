@@ -13,6 +13,7 @@ linters:
     - bidichk
     - bodyclose
     - contextcheck
+    - copyloopvar
     - decorder
     - depguard
     - dogsled
@@ -25,7 +26,6 @@ linters:
     - errname
     - exhaustive
     - exhaustruct
-    - exportloopref
     - forbidigo
     - forcetypeassert
     - funlen
