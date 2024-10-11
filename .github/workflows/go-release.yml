@@ -26,6 +26,7 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+          cache-dependency-path: go.sum
       - name: Install cosign
         if: ${{ success() }}
         uses: sigstore/cosign-installer@v3.7.0
