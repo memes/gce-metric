@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cloud.google.com/go/compute/metadata v0.5.2
-	cloud.google.com/go/monitoring v1.21.1
+	cloud.google.com/go/monitoring v1.21.2
 	github.com/go-logr/logr v1.4.2
 	github.com/go-logr/stdr v1.2.2
 	github.com/go-logr/zerologr v1.2.3
