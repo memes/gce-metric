@@ -157,11 +157,11 @@ issues:
   max-same-issues: 0
   new: false
   fix: false
+  uniq-by-line: false
 output:
   formats:
     - format: tab
   print-issued-lines: false
   print-linter-name: true
-  uniq-by-line: false
   path-prefix: ""
   sort-results: true
