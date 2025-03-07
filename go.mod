@@ -1,6 +1,9 @@
 module github.com/memes/gce-metric
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.6
+
 require (
 	cloud.google.com/go/compute/metadata v0.6.0
 	cloud.google.com/go/monitoring v1.22.1
