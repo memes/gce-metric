@@ -47,10 +47,11 @@ func listMain(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	req := monitoringpb.ListMetricDescriptorsRequest{
-		Name:      "projects/" + projectID,
-		Filter:    viper.GetString(FilterFlagName),
-		PageSize:  0,
-		PageToken: "",
+		Name:       "projects/" + projectID,
+		Filter:     viper.GetString(FilterFlagName),
+		PageSize:   0,
+		PageToken:  "",
+		ActiveOnly: false,
 	}
 	client, err := monitoring.NewMetricClient(ctx)
 	if err != nil {
