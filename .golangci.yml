@@ -106,6 +106,9 @@ linters-settings:
           - github.com/spf13/cobra
           - github.com/spf13/viper
           - github.com/rs/zerolog
+          - google.golang.org/api
+          - google.golang.org/protobuf
+          - google.golang.org/genproto
       test:
         files:
           - $test
@@ -115,6 +118,8 @@ linters-settings:
           - cloud.google.com
           - github.com/go-logr
           - github.com/google/uuid
+          - google.golang.org/protobuf
+          - google.golang.org/genproto
   errcheck:
     check-type-assertions: true
     check-blank: true

@@ -2,6 +2,7 @@
 .envrc
 .tool-versions
 .direnv
+.env
 
 # Ignore binaries
 /dist
