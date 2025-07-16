@@ -12,7 +12,7 @@ import (
 var logger = logr.Discard() //nolint:gochecknoglobals // The logger is deliberately global
 
 func main() {
-	rootCmd, err := NewRootCmd()
+	rootCmd, err := newRootCmd()
 	if err != nil {
 		logger.Error(err, "Error building commands")
 		os.Exit(1)

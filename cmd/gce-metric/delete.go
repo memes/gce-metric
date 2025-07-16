@@ -17,7 +17,7 @@ func newDeleteCommand() *cobra.Command {
 		Long: `Delete Google Cloud time-series metrics from a GCP project. One or more fully-qualified metric names (e.g. "custom.googleapis.com/my-metric") must be provided, and each will be deleted in turn.
 
 NOTE: This command can delete any metric given, including built-in Google Cloud metrics, provided the caller has the appropriate permissions.`,
-		Example: AppName + "delete --verbose --project ID custom.googleapis.com/my-metric",
+		Example: appName + "delete --verbose --project ID custom.googleapis.com/my-metric",
 		RunE:    deleteMetrics,
 		Args:    cobra.MinimumNArgs(1),
 	}
@@ -36,7 +36,11 @@ func deleteMetrics(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failure creating new metric client: %w", err)
 	}
-	defer client.Close()
+	defer func() {
+		if err = client.Close(); err != nil {
+			logger.Error(err, "Failed to close metric client")
+		}
+	}()
 	for _, metricType := range args {
 		request := &monitoringpb.DeleteMetricDescriptorRequest{
 			Name: "projects/" + projectID + "/metricDescriptors/" + metricType,

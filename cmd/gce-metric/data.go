@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	StartTimeFlag = "start-time"
-	EndTimeFlag   = "end-time"
+	startTimeFlag = "start-time"
+	endTimeFlag   = "end-time"
 )
 
 func newDataCommand() (*cobra.Command, error) {
@@ -25,21 +25,21 @@ func newDataCommand() (*cobra.Command, error) {
 		Use:     "data [--verbose] [--project ID] [--filter FILTER] [--start-time ISO8601] [--end-time ISO8601]",
 		Short:   "Return metric data from time-series that match the filter.",
 		Long:    `Returns each metric time-series that matches the supplied filter and has point-in-time data that is between the start and end times provided.`,
-		Example: AppName + ` data --project ID --filter 'metric.type = has_substring("my-resource")' --start-time $(date -Iseconds -v -4H)`,
+		Example: appName + ` data --project ID --filter 'metric.type = has_substring("my-resource")' --start-time $(date -Iseconds -v -4H)`,
 		RunE:    metricData,
 		Args:    cobra.NoArgs,
 	}
-	dataCmd.PersistentFlags().String(FilterFlagName, "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")
-	dataCmd.PersistentFlags().String(StartTimeFlag, "", "set the start time for filtering data, if unspecified matching time-series data points from 5 mins ago will be included")
-	dataCmd.PersistentFlags().String(EndTimeFlag, "", "set the end time for filtering data, if unspecified matching time-series data points up to the current time will be included")
-	if err := viper.BindPFlag(FilterFlagName, dataCmd.PersistentFlags().Lookup(FilterFlagName)); err != nil {
-		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", FilterFlagName, err)
+	dataCmd.PersistentFlags().String(filterFlagName, "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")
+	dataCmd.PersistentFlags().String(startTimeFlag, "", "set the start time for filtering data, if unspecified matching time-series data points from 5 mins ago will be included")
+	dataCmd.PersistentFlags().String(endTimeFlag, "", "set the end time for filtering data, if unspecified matching time-series data points up to the current time will be included")
+	if err := viper.BindPFlag(filterFlagName, dataCmd.PersistentFlags().Lookup(filterFlagName)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", filterFlagName, err)
 	}
-	if err := viper.BindPFlag(StartTimeFlag, dataCmd.PersistentFlags().Lookup(StartTimeFlag)); err != nil {
-		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", StartTimeFlag, err)
+	if err := viper.BindPFlag(startTimeFlag, dataCmd.PersistentFlags().Lookup(startTimeFlag)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", startTimeFlag, err)
 	}
-	if err := viper.BindPFlag(EndTimeFlag, dataCmd.PersistentFlags().Lookup(EndTimeFlag)); err != nil {
-		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", EndTimeFlag, err)
+	if err := viper.BindPFlag(endTimeFlag, dataCmd.PersistentFlags().Lookup(endTimeFlag)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", endTimeFlag, err)
 	}
 	return dataCmd, nil
 }
@@ -52,17 +52,17 @@ func metricData(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	startTime, err := buildTimestamp(viper.GetString(StartTimeFlag), time.Now().Add(-5*time.Minute))
+	startTime, err := buildTimestamp(viper.GetString(startTimeFlag), time.Now().Add(-5*time.Minute))
 	if err != nil {
 		return err
 	}
-	endTime, err := buildTimestamp(viper.GetString(EndTimeFlag), time.Now())
+	endTime, err := buildTimestamp(viper.GetString(endTimeFlag), time.Now())
 	if err != nil {
 		return err
 	}
 	req := monitoringpb.ListTimeSeriesRequest{
 		Name:   "projects/" + projectID,
-		Filter: viper.GetString(FilterFlagName),
+		Filter: viper.GetString(filterFlagName),
 		Interval: &monitoringpb.TimeInterval{
 			StartTime: startTime,
 			EndTime:   endTime,
@@ -74,7 +74,11 @@ func metricData(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("failure creating new metric client: %w", err)
 	}
-	defer client.Close()
+	defer func() {
+		if err = client.Close(); err != nil {
+			logger.Error(err, "Failed to close metric client")
+		}
+	}()
 	it := client.ListTimeSeries(ctx, &req)
 	for {
 		response, err := it.Next()

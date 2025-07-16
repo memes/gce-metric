@@ -15,12 +15,12 @@ import (
 )
 
 const (
-	SampleFlagName  = "sample"
-	PeriodFlagName  = "period"
-	FloorFlagName   = "floor"
-	CeilingFlagName = "ceiling"
-	IntegerFlagName = "integer"
-	DryRunFlagName  = "dry-run"
+	sampleFlagName  = "sample"
+	periodFlagName  = "period"
+	floorFlagName   = "floor"
+	ceilingFlagName = "ceiling"
+	integerFlagName = "integer"
+	dryRunFlagName  = "dry-run"
 )
 
 func newSawtoothCommand() *cobra.Command {
@@ -28,7 +28,7 @@ func newSawtoothCommand() *cobra.Command {
 		Use:     "sawtooth [flags] NAME",
 		Short:   "Generate synthetic metrics from a sawtooth function",
 		Long:    "Generate synthetic metric time-series data-points that approximate a sawtooth pattern, and send them to Google Cloud Monitoring to trigger scaling events or for other purposes.",
-		Example: AppName + "sawtooth --project ID custom.googleapis.com/syntheticScaler/cpu",
+		Example: appName + "sawtooth --project ID custom.googleapis.com/syntheticScaler/cpu",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
@@ -42,7 +42,7 @@ func newSineCommand() *cobra.Command {
 		Use:     "sine [flags] NAME",
 		Short:   "Generate synthetic metrics from a sine function",
 		Long:    "Generate synthetic metric time-series data-points that approximate a sine pattern, and send them to Google Cloud Monitoring to trigger scaling events or for other purposes.",
-		Example: AppName + "sine --project ID custom.googleapis.com/syntheticScaler/cpu",
+		Example: appName + "sine --project ID custom.googleapis.com/syntheticScaler/cpu",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
@@ -56,7 +56,7 @@ func newSquareCommand() *cobra.Command {
 		Use:     "square [flags] NAME",
 		Short:   "Generate synthetic metrics from a square function",
 		Long:    "Generate synthetic metric time-series data-points that approximate a square pattern, and send them to Google Cloud Monitoring to trigger scaling events or for other purposes.",
-		Example: AppName + "square --project ID custom.googleapis.com/syntheticScaler/cpu",
+		Example: appName + "square --project ID custom.googleapis.com/syntheticScaler/cpu",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
@@ -70,7 +70,7 @@ func newTriangleCommand() *cobra.Command {
 		Use:     "triangle [flags] NAME",
 		Short:   "Generate synthetic metrics from a triangle function",
 		Long:    "Generate synthetic metric time-series data-points that approximate a triangle pattern, and send them to Google Cloud Monitoring to trigger scaling events or for other purposes.",
-		Example: AppName + "triangle --project ID custom.googleapis.com/syntheticScaler/cpu",
+		Example: appName + "triangle --project ID custom.googleapis.com/syntheticScaler/cpu",
 		PreRunE: bindViperFlags,
 		RunE:    generatorMain,
 		Args:    cobra.MinimumNArgs(1),
@@ -80,32 +80,32 @@ func newTriangleCommand() *cobra.Command {
 }
 
 func addGeneratorFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().Duration(SampleFlagName, 60*time.Second, "sets the interval between sending metrics to Google Monitoring, must be valid Go duration string")
-	cmd.PersistentFlags().Duration(PeriodFlagName, 10*time.Minute, "sets the duration for one complete cycle from floor to ceiling, must be valid Go duration string")
-	cmd.PersistentFlags().Float64(FloorFlagName, 1.0, "sets the minimum value for the cycles, can be an integer or floating point value")
-	cmd.PersistentFlags().Float64(CeilingFlagName, 10.0, "sets the maximum value for the cycles, can be an integer of floating point value")
-	cmd.PersistentFlags().Bool(IntegerFlagName, false, "forces the generated metrics to be integers, making them less smooth and more step-like")
-	cmd.PersistentFlags().Bool(DryRunFlagName, false, "report metrics to stdout for review, without sending to Google Cloud Monitoring; for the curious!")
+	cmd.PersistentFlags().Duration(sampleFlagName, 60*time.Second, "sets the interval between sending metrics to Google Monitoring, must be valid Go duration string")
+	cmd.PersistentFlags().Duration(periodFlagName, 10*time.Minute, "sets the duration for one complete cycle from floor to ceiling, must be valid Go duration string")
+	cmd.PersistentFlags().Float64(floorFlagName, 1.0, "sets the minimum value for the cycles, can be an integer or floating point value")
+	cmd.PersistentFlags().Float64(ceilingFlagName, 10.0, "sets the maximum value for the cycles, can be an integer of floating point value")
+	cmd.PersistentFlags().Bool(integerFlagName, false, "forces the generated metrics to be integers, making them less smooth and more step-like")
+	cmd.PersistentFlags().Bool(dryRunFlagName, false, "report metrics to stdout for review, without sending to Google Cloud Monitoring; for the curious!")
 }
 
 func bindViperFlags(cmd *cobra.Command, _ []string) error {
-	if err := viper.BindPFlag(SampleFlagName, cmd.PersistentFlags().Lookup(SampleFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", SampleFlagName, err)
+	if err := viper.BindPFlag(sampleFlagName, cmd.PersistentFlags().Lookup(sampleFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", sampleFlagName, err)
 	}
-	if err := viper.BindPFlag(PeriodFlagName, cmd.PersistentFlags().Lookup(PeriodFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", PeriodFlagName, err)
+	if err := viper.BindPFlag(periodFlagName, cmd.PersistentFlags().Lookup(periodFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", periodFlagName, err)
 	}
-	if err := viper.BindPFlag(FloorFlagName, cmd.PersistentFlags().Lookup(FloorFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", FloorFlagName, err)
+	if err := viper.BindPFlag(floorFlagName, cmd.PersistentFlags().Lookup(floorFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", floorFlagName, err)
 	}
-	if err := viper.BindPFlag(CeilingFlagName, cmd.PersistentFlags().Lookup(CeilingFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", CeilingFlagName, err)
+	if err := viper.BindPFlag(ceilingFlagName, cmd.PersistentFlags().Lookup(ceilingFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", ceilingFlagName, err)
 	}
-	if err := viper.BindPFlag(IntegerFlagName, cmd.PersistentFlags().Lookup(IntegerFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", IntegerFlagName, err)
+	if err := viper.BindPFlag(integerFlagName, cmd.PersistentFlags().Lookup(integerFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", integerFlagName, err)
 	}
-	if err := viper.BindPFlag(DryRunFlagName, cmd.PersistentFlags().Lookup(DryRunFlagName)); err != nil {
-		return fmt.Errorf("failed to bind '%s' pflag: %w", DryRunFlagName, err)
+	if err := viper.BindPFlag(dryRunFlagName, cmd.PersistentFlags().Lookup(dryRunFlagName)); err != nil {
+		return fmt.Errorf("failed to bind '%s' pflag: %w", dryRunFlagName, err)
 	}
 	return nil
 }
@@ -116,14 +116,14 @@ func generatorMain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failure parsing PeriodicType: %w", err)
 	}
-	project := viper.GetString(ProjectIDFlagName)
-	sample := viper.GetDuration(SampleFlagName)
-	period := viper.GetDuration(PeriodFlagName)
-	floor := viper.GetFloat64(FloorFlagName)
-	ceiling := viper.GetFloat64(CeilingFlagName)
-	dryRun := viper.GetBool(DryRunFlagName)
-	asInteger := viper.GetBool(IntegerFlagName)
-	logger := logger.WithValues("periodicType", periodicType.String(), "project", project, "sample", sample, "period", period, FloorFlagName, floor, CeilingFlagName, ceiling, "dryRun", dryRun, "asInteger", asInteger)
+	project := viper.GetString(projectIDFlagName)
+	sample := viper.GetDuration(sampleFlagName)
+	period := viper.GetDuration(periodFlagName)
+	floor := viper.GetFloat64(floorFlagName)
+	ceiling := viper.GetFloat64(ceilingFlagName)
+	dryRun := viper.GetBool(dryRunFlagName)
+	asInteger := viper.GetBool(integerFlagName)
+	logger := logger.WithValues("periodicType", periodicType.String(), "project", project, "sample", sample, "period", period, floorFlagName, floor, ceilingFlagName, ceiling, "dryRun", dryRun, "asInteger", asInteger)
 	logger.V(0).Info("Building synthetic metric generator pipeline")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

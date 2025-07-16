@@ -99,13 +99,20 @@ func TestNonGCPDefault(t *testing.T) {
 	}
 }
 
+func closePipeline(t *testing.T, pipeline *Pipeline) {
+	t.Helper()
+	if err := pipeline.Close(); err != nil {
+		t.Errorf("Failed to close metric client: %v", err)
+	}
+}
+
 func TestNonGCPExplicitProjectID(t *testing.T) {
 	t.Parallel()
 	pipeline, err := newNonGCPTestPipeline(t, WithProjectID(testProjectID))
 	if err != nil {
 		t.Fatalf("Unexpected error returned from NewPipeline: %v", err)
 	}
-	defer pipeline.Close()
+	defer closePipeline(t, pipeline)
 	metric := generators.Metric{
 		Value:     1.1,
 		Timestamp: time.Now(),
@@ -179,7 +186,7 @@ func TestGCEPipelineDefault(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error returned from NewPipeline: %v", err)
 	}
-	pipeline.Close()
+	defer closePipeline(t, pipeline)
 	metric := generators.Metric{
 		Value:     1.1,
 		Timestamp: time.Now(),
@@ -253,7 +260,7 @@ func TestGKEPipelineDefault(t *testing.T) { //nolint:paralleltest // simulating 
 	if err != nil {
 		t.Fatalf("Unexpected error returned from NewPipeline: %v", err)
 	}
-	pipeline.Close()
+	defer closePipeline(t, pipeline)
 	metric := generators.Metric{
 		Value:     1.1,
 		Timestamp: time.Now(),
@@ -332,7 +339,11 @@ func Example() {
 		logger.Error(err, "NewPipeline returned an error")
 		return
 	}
-	defer pipeline.Close()
+	defer func() {
+		if err = pipeline.Close(); err != nil {
+			logger.Error(err, "Failed to close pipeline")
+		}
+	}()
 
 	// Launch a pipeline processor that will emit each value received from
 	// metrics channel.

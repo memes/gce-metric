@@ -1,5 +1,5 @@
-// Package generators provides functionality to generatehas types that can generate periodic, timestamped, values
-// that can be used as a source of synthetic metrics.
+// Package generators provides types that can generate periodic, timestamped, values that can be used as a source of
+// synthetic metrics.
 package generators
 
 import (
@@ -19,9 +19,8 @@ type Metric struct {
 	Timestamp time.Time
 }
 
-// Defines a function that will block until the context is cancelled,
-// emitting a Metric value to the output channel on each tick received
-// on the ticker channel.
+// PeriodicGenerator defines a function that will block until the context is cancelled, emitting a Metric value to the
+// output channel on each tick received on the ticker channel.
 type PeriodicGenerator func(context.Context, <-chan time.Time)
 
 // Accumulates the fluent configuration options that will be used to create the
@@ -33,10 +32,10 @@ type config struct {
 	bufferSize int
 }
 
-// Defines a generator configuration option function.
+// Option is the common interface defines a generator configuration option functions.
 type Option func(*config) error
 
-// Use the supplied Logger instance for the generator function.
+// WithLogger will assign the supplied Logger instance to the generator function.
 func WithLogger(logger logr.Logger) Option {
 	return func(c *config) error {
 		c.logger = logger
@@ -44,7 +43,7 @@ func WithLogger(logger logr.Logger) Option {
 	}
 }
 
-// Use the supplied ValueCalculator as the point-in-time generator function.
+// WithValueCalculator will assign the supplied ValueCalculator as the point-in-time generator function.
 func WithValueCalculator(calculator ValueCalculator) Option {
 	return func(c *config) error {
 		c.calculator = calculator
@@ -52,8 +51,8 @@ func WithValueCalculator(calculator ValueCalculator) Option {
 	}
 }
 
-// Sets the duration of a single waveform cycle. For example, if period is 60s
-// then the periodic generator will complete a full cycle of values every minute.
+// WithPeriod sets the duration of a single waveform cycle. For example, if period is 60s then the periodic generator
+// will complete a full cycle of values every minute.
 func WithPeriod(period time.Duration) Option {
 	return func(c *config) error {
 		c.period = period
@@ -61,11 +60,10 @@ func WithPeriod(period time.Duration) Option {
 	}
 }
 
-// Returns a PeriodicGenerator function that will generate a Metric value on each
-// tick, and a read-only channel that will receive the generated value.
-// The default generator is a sawtooth waveform in the range 0 <= value <= 100
-// with a period of 20 minutes, and a buffered channel with single Metric capacity.
-// The various Option functions can be used to change this.
+// NewPeriodicGenerator returns a PeriodicGenerator function that will generate a Metric value on each tick, and a
+// read-only channel that will receive the generated value.
+// The default generator is a sawtooth waveform in the range 0 <= value <= 100 with a period of 20 minutes, and a
+// buffered channel with single Metric capacity. The various Option functions can be used to change these defaults.
 func NewPeriodicGenerator(options ...Option) (PeriodicGenerator, <-chan Metric, error) {
 	config := &config{
 		logger:     logr.Discard(),
