@@ -42,7 +42,6 @@ jobs:
         with:
           version: latest
   go-test:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
