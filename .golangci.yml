@@ -1,12 +1,13 @@
 # spell-checker: disable
 ---
+version: "2"
 run:
   allow-parallel-runners: false
   concurrency: 6
   modules-download-mode: readonly
   tests: true
 linters:
-  disable-all: true
+  default: none
   enable:
     - asasalint
     - asciicheck
@@ -37,15 +38,11 @@ linters:
     - gocyclo
     - godot
     - godox
-    - gofmt
-    - gofumpt
     - goheader
-    - goimports
     - gomoddirectives
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - grouper
     - importas
@@ -53,8 +50,7 @@ linters:
     - interfacebloat
     - ireturn
     - loggercheck
-    # The tests have a high cyclometric complexity, disabling
-    # - maintidx
+    - maintidx
     - makezero
     - misspell
     - musttag
@@ -74,13 +70,11 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - stylecheck
     - tagliatelle
     - testableexamples
     - testpackage
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
@@ -89,84 +83,87 @@ linters:
     - wastedassign
     - whitespace
     - wrapcheck
-linters-settings:
-  depguard:
+  exclusions:
     rules:
-      main:
-        files:
-          - $all
-          - "!$test"
-        allow:
-          - $gostd
-          - github.com/memes
-          - cloud.google.com
-          - github.com/go-logr
-          - github.com/google/uuid
-          - github.com/mitchellh/go-homedir
-          - github.com/spf13/cobra
-          - github.com/spf13/viper
-          - github.com/rs/zerolog
-          - google.golang.org/api
-          - google.golang.org/protobuf
-          - google.golang.org/genproto
-      test:
-        files:
-          - $test
-        allow:
-          - $gostd
-          - github.com/memes
-          - cloud.google.com
-          - github.com/go-logr
-          - github.com/google/uuid
-          - google.golang.org/protobuf
-          - google.golang.org/genproto
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-  exhaustruct:
-    exclude:
-      - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.CreateTimeSeriesRequest$'
-      - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.ListTimeSeriesRequest$'
-      - 'github\.com/spf13/cobra\.Command$'
-      - 'github\.com/memes/gce-metric/pkg/generators\.Metric$'
-      - 'github\.com/memes/gce-metric/pkg/generators_test\.<anonymous>$'
-      - 'github\.com/memes/gce-metric/pkg/pipeline_test\.<anonymous>$'
-      - 'github\.com/rs/zerolog.ConsoleWriter$'
-      - 'google\.golang\.org/genproto/googleapis/api/metric\.Metric$'
-      - 'google\.golang\.org/protobuf/types/known/timestamppb\.Timestamp$'
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-  nakedret:
-    max-func-lines: 1
-  nolintlint:
-    allow-unused: false
-    allow-no-explanation: []
-    require-explanation: true
-    require-specific: true
-  tagliatelle:
-    case:
+      - path: '.+_test\.go'
+        linters:
+          - maintidx
+  settings:
+    depguard:
       rules:
-        json: snake
-        yaml: snake
-        xml: camel
-        bson: camel
-        avro: camel
-        mapstructure: kebab
+        main:
+          files:
+            - $all
+            - "!$test"
+          allow:
+            - $gostd
+            - github.com/memes
+            - cloud.google.com
+            - github.com/go-logr
+            - github.com/google/uuid
+            - github.com/mitchellh/go-homedir
+            - github.com/spf13/cobra
+            - github.com/spf13/viper
+            - github.com/rs/zerolog
+            - google.golang.org/api
+            - google.golang.org/protobuf
+            - google.golang.org/genproto
+        test:
+          files:
+            - $test
+          allow:
+            - $gostd
+            - github.com/memes
+            - cloud.google.com
+            - github.com/go-logr
+            - github.com/google/uuid
+            - google.golang.org/protobuf
+            - google.golang.org/genproto
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    exhaustruct:
+      exclude:
+        - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.CreateTimeSeriesRequest$'
+        - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.ListTimeSeriesRequest$'
+        - 'github\.com/spf13/cobra\.Command$'
+        - 'github\.com/memes/gce-metric/pkg/generators\.Metric$'
+        - 'github\.com/memes/gce-metric/pkg/generators_test\.<anonymous>$'
+        - 'github\.com/memes/gce-metric/pkg/pipeline_test\.<anonymous>$'
+        - 'github\.com/rs/zerolog.ConsoleWriter$'
+        - 'google\.golang\.org/genproto/googleapis/api/metric\.Metric$'
+        - 'google\.golang\.org/protobuf/types/known/timestamppb\.Timestamp$'
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    nakedret:
+      max-func-lines: 1
+    nolintlint:
+      allow-unused: false
+      allow-no-explanation: []
+      require-explanation: true
+      require-specific: true
+    tagliatelle:
+      case:
+        rules:
+          json: snake
+          yaml: snake
+          xml: camel
+          bson: camel
+          avro: camel
+          mapstructure: kebab
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
   new: false
   fix: false
   uniq-by-line: false
-output:
-  formats:
-    - format: tab
-  print-issued-lines: false
-  print-linter-name: true
-  path-prefix: ""
-  sort-results: true
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
