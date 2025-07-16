@@ -174,7 +174,7 @@ func newGCETestPipeline(t *testing.T, options ...pipeline.Option) (*pipeline.Pip
 		zone:       testZone,
 		attributes: map[string]string{},
 	}
-	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithOnGCE(onGCE(true)), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
+	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithEmitterAndCloser(newTestEmitter(t), nil), pipeline.WithOnGCE(onGCE(true)), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
 }
 
 func TestGCEPipelineDefault(t *testing.T) {
@@ -249,7 +249,7 @@ func newGKETestPipeline(t *testing.T, options ...pipeline.Option) (*pipeline.Pip
 			"cluster_name": testClusterName,
 		},
 	}
-	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithOnGCE(onGCE(true)), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
+	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithEmitterAndCloser(newTestEmitter(t), nil), pipeline.WithOnGCE(onGCE(true)), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
 }
 
 func TestGKEPipelineDefault(t *testing.T) { //nolint:paralleltest // simulating GKE requires t.SetEnv() - incompatible with t.Parallel()
