@@ -7,6 +7,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4](https://github.com/memes/gce-metric/compare/v1.3.3...v1.3.4) (2025-07-16)
+
+
+### Bug Fixes
+
+* Allow NewPipeline to function without ADC ([d652f04](https://github.com/memes/gce-metric/commit/d652f0496547ef52764b4a2f9731fe0ae7834cff))
+* Refactor to use GCP Monitoring only on-demand ([46235f2](https://github.com/memes/gce-metric/commit/46235f23a0d989cd9491ca48ea5fed36fc4ace16))
+* Update Alpine CA Certificate bundle ([de3b701](https://github.com/memes/gce-metric/commit/de3b701e9efba213133c49683e4f63d7eaf78ec1))
+* WithOnGCE and WithMetadataClient in package ([c369585](https://github.com/memes/gce-metric/commit/c36958553e0d419ec0340d100477f57d4babc9cc))
+
 ## [1.3.3](https://github.com/memes/gce-metric/compare/v1.3.2...v1.3.3) (2024-10-11)
 
 
