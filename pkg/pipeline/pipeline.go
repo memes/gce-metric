@@ -172,13 +172,19 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 		emitter:                    nil,
 		closer:                     nil,
 		client:                     nil,
-		onGCE:                      metadata.OnGCE,
-		metadataClient:             metadata.NewClient(nil),
+		onGCE:                      nil,
+		metadataClient:             nil,
 	}
 	for _, option := range options {
 		if err := option(pipeline); err != nil {
 			return nil, err
 		}
+	}
+	if pipeline.onGCE == nil {
+		pipeline.onGCE = metadata.OnGCE
+	}
+	if pipeline.metadataClient == nil {
+		pipeline.metadataClient = metadata.NewClient(nil)
 	}
 	if pipeline.projectID == "" {
 		if !pipeline.onGCE() {
