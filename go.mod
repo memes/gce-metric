@@ -7,7 +7,7 @@ toolchain go1.23.6
 require (
 	cloud.google.com/go/compute/metadata v0.7.0
 	cloud.google.com/go/monitoring v1.24.2
-	github.com/go-logr/logr v1.4.2
+	github.com/go-logr/logr v1.4.3
 	github.com/go-logr/stdr v1.2.2
 	github.com/go-logr/zerologr v1.2.3
 	github.com/google/uuid v1.6.0
