@@ -10,13 +10,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// ErrNilCreateTimeSeriesRequest is returned when a Transformer receives a nil CreateTimeSeriesRequest.
 var ErrNilCreateTimeSeriesRequest = errors.New("transformer received nil as CreateTimeSeriesRequest")
 
-// Defines a function that mutates a monitoring CreateTimeSeriesRequest object
-// using the supplied moment-in-time Metric object.
+// Transformer defines a function that mutates a monitoring CreateTimeSeriesRequest object using the supplied
+// moment-in-time Metric object.
 type Transformer func(*monitoringpb.CreateTimeSeriesRequest, generators.Metric) error
 
-// Returns a Transformer that will insert a generic_node resource into each
+// NewGenericMonitoredResourceTransformer returns a Transformer that will insert a generic_node resource into each
 // time-series value.
 func NewGenericMonitoredResourceTransformer(projectID, location, namespace, nodeID string) Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
@@ -38,7 +39,7 @@ func NewGenericMonitoredResourceTransformer(projectID, location, namespace, node
 	}
 }
 
-// Returns a Transformer that will insert a gce_instance resource into each
+// NewGCEMonitoredResourceTransformer returns a Transformer that will insert a gce_instance resource into each
 // time-series value.
 func NewGCEMonitoredResourceTransformer(projectID, instanceID, zone string) Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
@@ -59,7 +60,7 @@ func NewGCEMonitoredResourceTransformer(projectID, instanceID, zone string) Tran
 	}
 }
 
-// Returns a Transformer that will insert a gke_container resource into each
+// NewGKEMonitoredResourceTransformer returns a Transformer that will insert a gke_container resource into each
 // time-series value.
 func NewGKEMonitoredResourceTransformer(projectID, clusterName, namespaceID, instanceID, podID, containerName, zone string) Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
@@ -84,8 +85,8 @@ func NewGKEMonitoredResourceTransformer(projectID, clusterName, namespaceID, ins
 	}
 }
 
-// Returns a Transformer that replaces the time-series point-in-time record with
-// the embedded value in metric.
+// NewDoubleTypedValueTransformer returns a Transformer that replaces the time-series point-in-time record with the
+// embedded value in metric.
 func NewDoubleTypedValueTransformer() Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) error {
 		if req == nil {
@@ -114,8 +115,8 @@ func NewDoubleTypedValueTransformer() Transformer {
 	}
 }
 
-// Returns a Transformer that replaces the time-series point-in-time record with
-// the embedded value in metric after rounding to the nearest integer.
+// NewIntegerTypedValueTransformer returns a Transformer that replaces the time-series point-in-time record with the
+// embedded value in metric after rounding to the nearest integer.
 func NewIntegerTypedValueTransformer() Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, metric generators.Metric) error {
 		if req == nil {
@@ -144,8 +145,8 @@ func NewIntegerTypedValueTransformer() Transformer {
 	}
 }
 
-// Returns a Transformer that will insert a k8s_cluster resource into each
-// time-series value.
+// NewGenericKubernetesClusterMonitoredResourceTransformer returns a Transformer that will insert a k8s_cluster resource
+// into each time-series value.
 func NewGenericKubernetesClusterMonitoredResourceTransformer(projectID, location, clusterName string) Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
 		if req == nil {
@@ -165,8 +166,8 @@ func NewGenericKubernetesClusterMonitoredResourceTransformer(projectID, location
 	}
 }
 
-// Returns a Transformer that will insert a k8s_container resource into each
-// time-series value.
+// NewGenericKubernetesContainerMonitoredResourceTransformer returns a Transformer that will insert a k8s_container
+// resource into each time-series value.
 func NewGenericKubernetesContainerMonitoredResourceTransformer(projectID, location, clusterName, namespaceID, podID, containerName string) Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
 		if req == nil {
@@ -189,8 +190,8 @@ func NewGenericKubernetesContainerMonitoredResourceTransformer(projectID, locati
 	}
 }
 
-// Returns a Transformer that will insert a k8s_node resource into each
-// time-series value.
+// NewGenericKubernetesNodeMonitoredResourceTransformer returns a Transformer that will insert a k8s_node resource into
+// each time-series value.
 func NewGenericKubernetesNodeMonitoredResourceTransformer(projectID, location, clusterName, nodeName string) Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
 		if req == nil {
@@ -211,8 +212,8 @@ func NewGenericKubernetesNodeMonitoredResourceTransformer(projectID, location, c
 	}
 }
 
-// Returns a Transformer that will insert a k8s_pod resource into each time-series
-// value.
+// NewGenericKubernetesPodMonitoredResourceTransformer returns a Transformer that will insert a k8s_pod resource into
+// each time-series value.
 func NewGenericKubernetesPodMonitoredResourceTransformer(projectID, location, clusterName, namespaceID, podID string) Transformer {
 	return func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
 		if req == nil {

@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	FilterFlagName = "filter"
-	JSONFlagName   = "json"
+	filterFlagName = "filter"
+	jsonFlagName   = "json"
 )
 
 func newListCommand() (*cobra.Command, error) {
@@ -24,16 +24,16 @@ func newListCommand() (*cobra.Command, error) {
 		Use:     "list [--verbose] [--project ID] [--filter FILTER] [--json]",
 		Short:   "List Google Cloud time-series metrics that match the filter",
 		Long:    "List any Google Cloud time-series metrics that match the filter, including those reserved for Google Cloud use. The default filter will match any time-series with the prefix name 'custom.googleapis.com', which is the recommended prefix for custom metrics. Use the --json flag to include a dump of the metric descriptor.",
-		Example: AppName + ` list --project ID --filter 'metric.type = has_substring("my-resource")' --json`,
+		Example: appName + ` list --project ID --filter 'metric.type = has_substring("my-resource")' --json`,
 		RunE:    listMain,
 	}
-	listCmd.PersistentFlags().String(FilterFlagName, "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")
-	listCmd.PersistentFlags().Bool(JSONFlagName, false, "output the descriptor for each matching metric as JSON")
-	if err := viper.BindPFlag(FilterFlagName, listCmd.PersistentFlags().Lookup(FilterFlagName)); err != nil {
-		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", FilterFlagName, err)
+	listCmd.PersistentFlags().String(filterFlagName, "metric.type = starts_with(\"custom.googleapis.com/\")", "set the filter to use when listing metrics")
+	listCmd.PersistentFlags().Bool(jsonFlagName, false, "output the descriptor for each matching metric as JSON")
+	if err := viper.BindPFlag(filterFlagName, listCmd.PersistentFlags().Lookup(filterFlagName)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", filterFlagName, err)
 	}
-	if err := viper.BindPFlag(JSONFlagName, listCmd.PersistentFlags().Lookup(JSONFlagName)); err != nil {
-		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", JSONFlagName, err)
+	if err := viper.BindPFlag(jsonFlagName, listCmd.PersistentFlags().Lookup(jsonFlagName)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", jsonFlagName, err)
 	}
 	return listCmd, nil
 }
@@ -48,7 +48,7 @@ func listMain(_ *cobra.Command, _ []string) error {
 	}
 	req := monitoringpb.ListMetricDescriptorsRequest{
 		Name:       "projects/" + projectID,
-		Filter:     viper.GetString(FilterFlagName),
+		Filter:     viper.GetString(filterFlagName),
 		PageSize:   0,
 		PageToken:  "",
 		ActiveOnly: false,
@@ -57,7 +57,11 @@ func listMain(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("failure creating new metric client: %w", err)
 	}
-	defer client.Close()
+	defer func() {
+		if err = client.Close(); err != nil {
+			logger.Error(err, "Failed to close metric client")
+		}
+	}()
 	it := client.ListMetricDescriptors(ctx, &req)
 	for {
 		response, err := it.Next()
@@ -66,7 +70,7 @@ func listMain(_ *cobra.Command, _ []string) error {
 			return nil
 		case err != nil:
 			return fmt.Errorf("failure getting list of metrics: %w", err)
-		case viper.GetBool(JSONFlagName):
+		case viper.GetBool(jsonFlagName):
 			fmt.Println(protojson.Format(response)) //nolint:forbidigo // The user has requested that the names of matching metrics be printed to stdout
 		default:
 			fmt.Println(response.Type) //nolint:forbidigo // The user has requested that the names of matching metrics be printed to stdout

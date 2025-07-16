@@ -6,38 +6,34 @@ import (
 	"math"
 )
 
-// Defines the periodic function generators known to the package.
+// PeriodicType defines the periodic function generators known to the package.
 type PeriodicType int
 
-// Defines a function that will return a float64 value for the given
-// phase of the cycle.
+// ValueCalculator defines a function that will return a float64 value for the given phase of the cycle depending on the
+// PeriodicType used.
 type ValueCalculator func(phase float64) float64
 
 const (
-	// Represents an unrecognised periodic function that will return 0.0 on
-	// all calls.
+	// Invalid represents an unrecognised periodic function that will return 0.0 on all calls.
 	Invalid PeriodicType = iota
-	// Represents a periodic function that generates a sawtooth wave, rising
-	// linearly from 0.0 to 1.0 over one cycle, before falling back to 0.0
-	// and repeating.
+	// Sawtooth represents a periodic function that generates a sawtooth wave, rising linearly from 0.0 to 1.0 over
+	// one cycle, before falling back to 0.0 and repeating.
 	Sawtooth
-	// Represents a periodic function that generates a sine wave, resized to
-	// return a value between 0.0 and 1.0 inclusive, phase-shifted so that
-	// values calculated when phase is close to an integer will be 0.0.
+	// Sine represents a periodic function that generates a sine wave, resized to return a value between 0.0 and 1.0
+	// inclusive, phase-shifted so that values calculated when phase is close to an integer will be 0.0.
 	Sine
-	// Represents a periodic function that generates 0.0 or 1.0 for the first
-	// half or second half of each cycle, respectively.
+	// Square represents a periodic function that generates 0.0 or 1.0 for the first half or second half of each
+	// cycle, respectively.
 	Square
-	// Represents a periodic function that generates a triangle wave, rising
-	// linearly from 0.0 to 1.0 over first half cycle, then falling linearly
-	// to 0.0 for second half of cycle.
+	// Triangle represents a periodic function that generates a triangle wave, rising linearly from 0.0 to 1.0 over
+	// first half cycle, then falling linearly to 0.0 for second half of cycle.
 	Triangle
 )
 
+// ErrInvalidPeriodicType is returned when an unknown PeriodicType is encountered.
 var ErrInvalidPeriodicType = errors.New("invalid PeriodicType name")
 
-// Returns a string identifier for the PeriodicType, or "unknown" if it is an
-// unrecognised type.
+// String returns a string identifier for the PeriodicType, or "unknown" if it is an unrecognised type.
 func (pt PeriodicType) String() string {
 	switch pt {
 	case Invalid:
@@ -55,8 +51,8 @@ func (pt PeriodicType) String() string {
 	}
 }
 
-// Returns a ValueCalculator for the PeriodicType. If the periodic type does not
-// match with a known implementation the Invalid function will be returned.
+// ValueCalculator returns a concrete ValueCalculator for the PeriodicType. If the periodic type does not match with a
+// known implementation the Invalid function will be returned.
 func (pt PeriodicType) ValueCalculator() ValueCalculator {
 	switch pt {
 	case Invalid:
@@ -91,8 +87,8 @@ func (pt PeriodicType) ValueCalculator() ValueCalculator {
 	}
 }
 
-// Parses and returns a PeriodicType from a supplied string. If the string does
-// not match an known type an error will be returned.
+// ParsePeriodicType returns a valid PeriodicType from a supplied string. If the string does not match an known type an
+// error will be returned.
 func ParsePeriodicType(name string) (PeriodicType, error) {
 	switch name {
 	case "sawtooth":
@@ -108,8 +104,8 @@ func ParsePeriodicType(name string) (PeriodicType, error) {
 	}
 }
 
-// Creates a new wrapped ValueCalculator from a PeriodicType that returns values
-// in the range a through b.
+// NewPeriodicRangeCalculator returns new wrapped ValueCalculator from a PeriodicType that returns values in the range a
+// through b.
 func NewPeriodicRangeCalculator(a, b float64, periodicType PeriodicType) ValueCalculator {
 	minimumValue := math.Min(a, b)
 	delta := math.Abs(a - b)

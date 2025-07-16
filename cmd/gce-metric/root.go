@@ -16,37 +16,38 @@ import (
 )
 
 const (
-	AppName           = "gce-metric"
-	VerboseFlagName   = "verbose"
-	PrettyFlagName    = "pretty"
-	ProjectIDFlagName = "project"
+	appName           = "gce-metric"
+	verboseFlagName   = "verbose"
+	prettyFlagName    = "pretty"
+	projectIDFlagName = "project"
 )
 
 var (
 	// Version is updated from git tags during build.
-	version                    = "unspecified"
+	version = "unspecified"
+	// ErrFailedToDetectProjectID is returned when the Project ID cannot be determined from Compute metadata.
 	ErrFailedToDetectProjectID = errors.New("failed to determine Google project id from operating environment")
 )
 
-func NewRootCmd() (*cobra.Command, error) {
+func newRootCmd() (*cobra.Command, error) {
 	cobra.OnInitialize(initConfig)
 	rootCmd := &cobra.Command{
-		Use:     AppName,
+		Use:     appName,
 		Version: version,
 		Short:   "Generate synthetic gauge metrics for Google Cloud Monitoring",
 		Long:    `Generate synthetic gauge metrics compatible with Google Cloud Monitoring that follow a cyclic pattern, with values calculated using a range you specify.`,
 	}
-	rootCmd.PersistentFlags().Count(VerboseFlagName, "enable verbose logging; can be repeated to increase verbosity")
-	rootCmd.PersistentFlags().Bool(PrettyFlagName, false, "disables structured JSON logging to stdout, making it easier to read")
-	rootCmd.PersistentFlags().String(ProjectIDFlagName, "", "the GCP project id to use; specify if not running on GCE or to override detected project id")
-	if err := viper.BindPFlag(VerboseFlagName, rootCmd.PersistentFlags().Lookup(VerboseFlagName)); err != nil {
-		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", VerboseFlagName, err)
+	rootCmd.PersistentFlags().Count(verboseFlagName, "enable verbose logging; can be repeated to increase verbosity")
+	rootCmd.PersistentFlags().Bool(prettyFlagName, false, "disables structured JSON logging to stdout, making it easier to read")
+	rootCmd.PersistentFlags().String(projectIDFlagName, "", "the GCP project id to use; specify if not running on GCE or to override detected project id")
+	if err := viper.BindPFlag(verboseFlagName, rootCmd.PersistentFlags().Lookup(verboseFlagName)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", verboseFlagName, err)
 	}
-	if err := viper.BindPFlag(PrettyFlagName, rootCmd.PersistentFlags().Lookup(PrettyFlagName)); err != nil {
-		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", PrettyFlagName, err)
+	if err := viper.BindPFlag(prettyFlagName, rootCmd.PersistentFlags().Lookup(prettyFlagName)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", prettyFlagName, err)
 	}
-	if err := viper.BindPFlag(ProjectIDFlagName, rootCmd.PersistentFlags().Lookup(ProjectIDFlagName)); err != nil {
-		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", ProjectIDFlagName, err)
+	if err := viper.BindPFlag(projectIDFlagName, rootCmd.PersistentFlags().Lookup(projectIDFlagName)); err != nil {
+		return nil, fmt.Errorf("failed to bind '%s' pflag: %w", projectIDFlagName, err)
 	}
 	sawtoothCmd := newSawtoothCommand()
 	sineCmd := newSineCommand()
@@ -75,12 +76,12 @@ func initConfig() {
 	if home, err := homedir.Dir(); err == nil {
 		viper.AddConfigPath(home)
 	}
-	viper.SetConfigName("." + AppName)
-	viper.SetEnvPrefix(AppName)
+	viper.SetConfigName("." + appName)
+	viper.SetEnvPrefix(appName)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
-	verbosity := viper.GetInt(VerboseFlagName)
+	verbosity := viper.GetInt(verboseFlagName)
 	switch {
 	case verbosity > 2:
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
@@ -91,7 +92,7 @@ func initConfig() {
 	default:
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	}
-	if viper.GetBool(PrettyFlagName) {
+	if viper.GetBool(prettyFlagName) {
 		zl = zl.Output(zerolog.ConsoleWriter{
 			Out:     os.Stdout,
 			NoColor: false,
@@ -109,7 +110,7 @@ func initConfig() {
 
 func effectiveProjectID(ctx context.Context) (string, error) {
 	logger.V(1).Info("Determining project identifier to use")
-	projectID := viper.GetString(ProjectIDFlagName)
+	projectID := viper.GetString(projectIDFlagName)
 	if projectID != "" {
 		logger.V(2).Info("Returning project id from viper", "projectID", projectID)
 		return projectID, nil

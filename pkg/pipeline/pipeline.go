@@ -1,10 +1,10 @@
+// Package pipeline creates a set of Transformers that process a Metric to make it suitable to send to GCP Monitoring.
 package pipeline
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"cloud.google.com/go/compute/metadata"
@@ -14,19 +14,22 @@ import (
 	"github.com/google/uuid"
 	"github.com/memes/gce-metric/pkg/generators"
 	metricpb "google.golang.org/genproto/googleapis/api/metric"
-	"google.golang.org/protobuf/encoding/prototext"
 )
 
 const (
+	// DefaultMetricType defines the default name to give to the generated synthetic metrics timeseries.
 	DefaultMetricType = "custom.googleapis.com/gce_metric"
-	DefaultLocation   = "global"
-	DefaultNamespace  = "github.com/memes/gce-metric"
+	// DefaultLocation defines the default location added to generated synthetic metrics.
+	DefaultLocation = "global"
+	// DefaultNamespace defines the default namespace to give to the generated synthetic metrics timeseries.
+	DefaultNamespace = "github.com/memes/gce-metric"
 )
 
-// This error will be returned if a pipeline function requires a Google Cloud
-// execution environment.
-var errNotGCP = errors.New("not running on Google Cloud")
+// ErrNotGCP is returned if a pipeline function requires a Google Cloud execution environment.
+var ErrNotGCP = errors.New("not running on Google Cloud")
 
+// metadataClient defines an interface that is a subset of GCP Compute Engine metadata client. This allows test cases to
+// provide appropriate values that would be detected or inferred from a real GCP compute environment.
 type metadataClient interface {
 	ProjectID() (string, error)
 	InstanceID() (string, error)
@@ -34,14 +37,20 @@ type metadataClient interface {
 	InstanceAttributeValue(string) (string, error)
 }
 
+// Emitter defines a function that will handle a generated Metrics request.
 type Emitter func(context.Context, *monitoringpb.CreateTimeSeriesRequest) error
 
+// Closer defines a function that can close and cleanup an Emitter.
 type Closer func() error
 
+// Processor defines a function that can receive a Metric from a generator and do something useful with it.
 type Processor func(context.Context, <-chan generators.Metric) error
 
+// Option defines a function type that can be used to configure a pipeline.
 type Option func(*Pipeline) error
 
+// Pipeline defines a collection of Transformers and an Emitter that can process Metric values received on a channel and
+// send them to Google Cloud Metrics as a time-series.
 type Pipeline struct {
 	logger                     logr.Logger
 	projectID                  string
@@ -57,6 +66,7 @@ type Pipeline struct {
 	metadataClient metadataClient
 }
 
+// Close will execute the Closer function associated with the Pipeline, if it is defined.
 func (p *Pipeline) Close() error {
 	if p.closer == nil {
 		return nil
@@ -64,6 +74,7 @@ func (p *Pipeline) Close() error {
 	return p.closer()
 }
 
+// BuildRequest creates a GCP Metrics time-series request that can be sent to GCP.
 func (p *Pipeline) BuildRequest(metric generators.Metric) (*monitoringpb.CreateTimeSeriesRequest, error) {
 	p.logger.V(2).Info("Building request", "metric", metric)
 	req := &monitoringpb.CreateTimeSeriesRequest{
@@ -86,6 +97,7 @@ func (p *Pipeline) BuildRequest(metric generators.Metric) (*monitoringpb.CreateT
 	return req, nil
 }
 
+// WithLogger will use the provided Logger in the pipeline.
 func WithLogger(logger logr.Logger) Option {
 	return func(p *Pipeline) error {
 		p.logger = logger
@@ -93,8 +105,8 @@ func WithLogger(logger logr.Logger) Option {
 	}
 }
 
-// Use a specific project identifier for the synthetic metrics in preference to
-// detecting from metadata.
+// WithProjectID will force the pipeline to use the specific project identifier for the synthetic metrics in preference
+// to an identifier detected from compute metadata.
 func WithProjectID(projectID string) Option {
 	return func(p *Pipeline) error {
 		p.projectID = projectID
@@ -102,6 +114,7 @@ func WithProjectID(projectID string) Option {
 	}
 }
 
+// WithMetricType will force the pipeline to use the specific metric name instead of package default.
 func WithMetricType(metricType string) Option {
 	return func(p *Pipeline) error {
 		p.metricType = metricType
@@ -109,6 +122,7 @@ func WithMetricType(metricType string) Option {
 	}
 }
 
+// WithoutDefaultTransformers will instruct the pipeline builder to exclude the default transformers.
 func WithoutDefaultTransformers() Option {
 	return func(p *Pipeline) error {
 		p.excludeDefaultTransformers = true
@@ -116,6 +130,8 @@ func WithoutDefaultTransformers() Option {
 	}
 }
 
+// WithTransformers will instruct the pipeline builder to include the provided transformers in the pipeline, appending
+// to any existing transformers in the pipeline.
 func WithTransformers(transformers []Transformer) Option {
 	return func(p *Pipeline) error {
 		p.transformers = append(p.transformers, transformers...)
@@ -123,23 +139,35 @@ func WithTransformers(transformers []Transformer) Option {
 	}
 }
 
-func WithWriterEmitter(writer io.Writer) Option {
+// WithEmitterAndCloser will instruct the pipeline builder to call the supplied Emitter and Closer functions instead of
+// the default GCP Metrics client's writer.
+func WithEmitterAndCloser(emitter Emitter, closer Closer) Option {
 	return func(p *Pipeline) error {
-		p.emitter = func(_ context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
-			p.logger.V(2).Info("Emitting time-series request to writer")
-			if _, err := fmt.Fprintf(writer, "%s\n", prototext.Format(req)); err != nil {
-				return fmt.Errorf("failure writing time-series request: %w", err)
-			}
-			return nil
-		}
-		p.closer = func() error {
-			p.logger.V(2).Info("Closing time-series writer emitter")
-			return nil
-		}
+		p.emitter = emitter
+		p.closer = closer
 		return nil
 	}
 }
 
+// WithOnGCE will instruct the pipeline builder to use the provided function to determine if the pipeline is running in
+// a Google Cloud environment instead of default Google Cloud library function.
+func WithOnGCE(onGCE func() bool) Option {
+	return func(p *Pipeline) error {
+		p.onGCE = onGCE
+		return nil
+	}
+}
+
+// WithMetadataClient will instruct the pipeline builder to use the provided metadata client to determine project, zone,
+// or other details of a Google Cloud environment instead of default Google Cloud runtime function.
+func WithMetadataClient(client metadataClient) Option {
+	return func(p *Pipeline) error {
+		p.metadataClient = client
+		return nil
+	}
+}
+
+// NewPipeline will build a pipeline of transformers that emits value(s) to the configured target.
 func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 	pipeline := &Pipeline{
 		logger:                     logr.Discard(),
@@ -151,17 +179,23 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 		emitter:                    nil,
 		closer:                     nil,
 		client:                     nil,
-		onGCE:                      metadata.OnGCE,
-		metadataClient:             metadata.NewClient(nil),
+		onGCE:                      nil,
+		metadataClient:             nil,
 	}
 	for _, option := range options {
 		if err := option(pipeline); err != nil {
 			return nil, err
 		}
 	}
+	if pipeline.onGCE == nil {
+		pipeline.onGCE = metadata.OnGCE
+	}
+	if pipeline.metadataClient == nil {
+		pipeline.metadataClient = metadata.NewClient(nil)
+	}
 	if pipeline.projectID == "" {
 		if !pipeline.onGCE() {
-			return nil, errNotGCP
+			return nil, ErrNotGCP
 		}
 		projectID, err := pipeline.metadataClient.ProjectID()
 		if err != nil {
@@ -177,40 +211,14 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 		pipeline.transformers = append(defaultTransformers, pipeline.transformers...)
 	}
 	if pipeline.emitter == nil {
-		pipeline.emitter = pipeline.defaultEmitter
-	}
-	if pipeline.closer == nil {
-		pipeline.closer = pipeline.defaultCloser
-	}
-	if pipeline.client == nil {
-		client, err := monitoring.NewMetricClient(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failure creating new metric client: %w", err)
+		if err := pipeline.defaultEmitter(ctx); err != nil {
+			return nil, err
 		}
-		pipeline.client = client
 	}
 	return pipeline, nil
 }
 
-func (p *Pipeline) defaultEmitter(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
-	p.logger.V(2).Info("Emitting time-series request to GCP")
-	if err := p.client.CreateTimeSeries(ctx, req); err != nil {
-		return fmt.Errorf("failure sending create time-series request: %w", err)
-	}
-	return nil
-}
-
-func (p *Pipeline) defaultCloser() error {
-	p.logger.V(2).Info("Closing time-series emitter")
-	if p.client == nil {
-		return nil
-	}
-	if err := p.client.Close(); err != nil {
-		return fmt.Errorf("failure closing metric client: %w", err)
-	}
-	return nil
-}
-
+// Defines the default set of Transformer instances to use in a pipeline based on detected environment.
 func (p *Pipeline) defaultTransformers(_ context.Context) ([]Transformer, error) {
 	p.logger.V(1).Info("Collecting default transformers")
 	transformers := []Transformer{}
@@ -250,6 +258,34 @@ func (p *Pipeline) defaultTransformers(_ context.Context) ([]Transformer, error)
 	return transformers, nil
 }
 
+// Set the pipeline Emitter and Closer to use GCP Monitoring client, replacing any existing functions that may be set on
+// the instance.
+func (p *Pipeline) defaultEmitter(ctx context.Context) error {
+	client, err := monitoring.NewMetricClient(ctx)
+	if err != nil {
+		return fmt.Errorf("failure creating new metric client: %w", err)
+	}
+	p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
+		p.logger.V(2).Info("Emitting time-series request to GCP")
+		if err := client.CreateTimeSeries(ctx, req); err != nil {
+			return fmt.Errorf("failure sending create time-series request: %w", err)
+		}
+		return nil
+	}
+	p.closer = func() error {
+		p.logger.V(2).Info("Closing time-series emitter")
+		if client == nil {
+			return nil
+		}
+		if err := client.Close(); err != nil {
+			return fmt.Errorf("failure closing metric client: %w", err)
+		}
+		return nil
+	}
+	return nil
+}
+
+// Processor returns the Processor implementation associated with the pipeline.
 func (p *Pipeline) Processor() Processor {
 	return func(ctx context.Context, input <-chan generators.Metric) error {
 		p.logger.V(2).Info("Launching pipeline processor")
