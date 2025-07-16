@@ -46,6 +46,7 @@
         "timestamppb",
         "trimpath",
         "wontfix",
+        "wrapcheck",
         "zerolog",
         "zerologr"
     ],

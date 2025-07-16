@@ -27,8 +27,8 @@ const (
 	DefaultNamespace = "github.com/memes/gce-metric"
 )
 
-// This error will be returned if a pipeline function requires a Google Cloud execution environment.
-var errNotGCP = errors.New("not running on Google Cloud")
+// ErrNotGCP is returned if a pipeline function requires a Google Cloud execution environment.
+var ErrNotGCP = errors.New("not running on Google Cloud")
 
 // metadataClient defines an interface that is a subset of GCP Compute Engine metadata client. This allows test cases to
 // provide appropriate values that would be detected or inferred from a real GCP compute environment.
@@ -160,6 +160,24 @@ func WithWriterEmitter(writer io.Writer) Option {
 	}
 }
 
+// WithOnGCE will instruct the pipeline builder to use the provided function to determine if the pipeline is running in
+// a Google Cloud environment instead of default Google Cloud library function.
+func WithOnGCE(onGCE func() bool) Option {
+	return func(p *Pipeline) error {
+		p.onGCE = onGCE
+		return nil
+	}
+}
+
+// WithMetadataClient will instruct the pipeline builder to use the provided metadata client to determine project, zone,
+// or other details of a Google Cloud environment instead of default Google Cloud runtime function.
+func WithMetadataClient(client metadataClient) Option {
+	return func(p *Pipeline) error {
+		p.metadataClient = client
+		return nil
+	}
+}
+
 // NewPipeline will build a pipeline of transformers that emits value(s) to the configured target.
 func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 	pipeline := &Pipeline{
@@ -188,7 +206,7 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 	}
 	if pipeline.projectID == "" {
 		if !pipeline.onGCE() {
-			return nil, errNotGCP
+			return nil, ErrNotGCP
 		}
 		projectID, err := pipeline.metadataClient.ProjectID()
 		if err != nil {
