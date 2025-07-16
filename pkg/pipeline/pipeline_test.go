@@ -58,12 +58,18 @@ func (t *testClient) InstanceAttributeValue(name string) (string, error) {
 	return t.attributes[name], nil
 }
 
-func trueOnGCE() bool {
-	return true
+func onGCE(gce bool) func() bool {
+	return func() bool {
+		return gce
+	}
 }
 
-func falseOnGCE() bool {
-	return false
+// Implements a noop Emitter that doesn't require GCP metrics API to be enabled and available.
+func newTestEmitter(t *testing.T) pipeline.Emitter {
+	t.Helper()
+	return func(_ context.Context, _ *monitoringpb.CreateTimeSeriesRequest) error {
+		return nil
+	}
 }
 
 // Helper function to create a new Pipeline object that will appear to be running
@@ -76,7 +82,7 @@ func newNonGCPTestPipeline(t *testing.T, options ...pipeline.Option) (*pipeline.
 		zone:       "",
 		attributes: map[string]string{},
 	}
-	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithOnGCE(falseOnGCE), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
+	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithEmitterAndCloser(newTestEmitter(t), nil), pipeline.WithOnGCE(onGCE(false)), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
 }
 
 func TestNonGCPDefault(t *testing.T) {
@@ -168,7 +174,7 @@ func newGCETestPipeline(t *testing.T, options ...pipeline.Option) (*pipeline.Pip
 		zone:       testZone,
 		attributes: map[string]string{},
 	}
-	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithOnGCE(trueOnGCE), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
+	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithOnGCE(onGCE(true)), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
 }
 
 func TestGCEPipelineDefault(t *testing.T) {
@@ -243,7 +249,7 @@ func newGKETestPipeline(t *testing.T, options ...pipeline.Option) (*pipeline.Pip
 			"cluster_name": testClusterName,
 		},
 	}
-	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithOnGCE(trueOnGCE), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
+	return pipeline.NewPipeline(context.Background(), append(options, pipeline.WithOnGCE(onGCE(true)), pipeline.WithMetadataClient(client))...) //nolint:wrapcheck // Don't need to wrap error for testing
 }
 
 func TestGKEPipelineDefault(t *testing.T) { //nolint:paralleltest // simulating GKE requires t.SetEnv() - incompatible with t.Parallel()
@@ -316,7 +322,6 @@ func Example() {
 		pipeline.WithLogger(logger),
 		pipeline.WithProjectID("my-google-project-id"),
 		pipeline.WithMetricType("custom.googleapis.com/my-synthetic-metric"),
-		pipeline.WithWriterEmitter(os.Stdout),
 		pipeline.WithTransformers([]pipeline.Transformer{
 			func(req *monitoringpb.CreateTimeSeriesRequest, _ generators.Metric) error {
 				for _, series := range req.TimeSeries {

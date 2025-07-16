@@ -8,10 +8,12 @@ import (
 	"syscall"
 	"time"
 
+	"cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"github.com/memes/gce-metric/pkg/generators"
 	"github.com/memes/gce-metric/pkg/pipeline"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 const (
@@ -151,7 +153,18 @@ func generatorMain(cmd *cobra.Command, args []string) error {
 		pipelineOptions = append(pipelineOptions, pipeline.WithTransformers([]pipeline.Transformer{pipeline.NewIntegerTypedValueTransformer()}))
 	}
 	if dryRun {
-		pipelineOptions = append(pipelineOptions, pipeline.WithWriterEmitter(os.Stdout))
+		emitter := func(_ context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
+			logger.V(2).Info("Emitting time-series request to writer")
+			if _, err := fmt.Fprintf(os.Stdout, "%s\n", prototext.Format(req)); err != nil {
+				return fmt.Errorf("failure writing time-series request: %w", err)
+			}
+			return nil
+		}
+		closer := func() error {
+			logger.V(2).Info("Closing time-series writer emitter")
+			return nil
+		}
+		pipelineOptions = append(pipelineOptions, pipeline.WithEmitterAndCloser(emitter, closer))
 	}
 	pipe, err := pipeline.NewPipeline(ctx, pipelineOptions...)
 	if err != nil {

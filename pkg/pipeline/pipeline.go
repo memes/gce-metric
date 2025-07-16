@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"cloud.google.com/go/compute/metadata"
@@ -15,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/memes/gce-metric/pkg/generators"
 	metricpb "google.golang.org/genproto/googleapis/api/metric"
-	"google.golang.org/protobuf/encoding/prototext"
 )
 
 const (
@@ -141,21 +139,12 @@ func WithTransformers(transformers []Transformer) Option {
 	}
 }
 
-// WithWriterEmitter will instruct the pipeline builder to output metrics to the provided io.Writer instead of the
+// WithEmitterAndCloser will instruct the pipeline builder to call the supplied Emitter and Closer functions instead of
 // the default GCP Metrics client's writer.
-func WithWriterEmitter(writer io.Writer) Option {
+func WithEmitterAndCloser(emitter Emitter, closer Closer) Option {
 	return func(p *Pipeline) error {
-		p.emitter = func(_ context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
-			p.logger.V(2).Info("Emitting time-series request to writer")
-			if _, err := fmt.Fprintf(writer, "%s\n", prototext.Format(req)); err != nil {
-				return fmt.Errorf("failure writing time-series request: %w", err)
-			}
-			return nil
-		}
-		p.closer = func() error {
-			p.logger.V(2).Info("Closing time-series writer emitter")
-			return nil
-		}
+		p.emitter = emitter
+		p.closer = closer
 		return nil
 	}
 }
@@ -222,40 +211,11 @@ func NewPipeline(ctx context.Context, options ...Option) (*Pipeline, error) {
 		pipeline.transformers = append(defaultTransformers, pipeline.transformers...)
 	}
 	if pipeline.emitter == nil {
-		pipeline.emitter = pipeline.defaultEmitter
-	}
-	if pipeline.closer == nil {
-		pipeline.closer = pipeline.defaultCloser
-	}
-	if pipeline.client == nil {
-		client, err := monitoring.NewMetricClient(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failure creating new metric client: %w", err)
+		if err := pipeline.defaultEmitter(ctx); err != nil {
+			return nil, err
 		}
-		pipeline.client = client
 	}
 	return pipeline, nil
-}
-
-// Defines an Emitter that sends the CreateTimeSeriesRequest to GCP Monitoring.
-func (p *Pipeline) defaultEmitter(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
-	p.logger.V(2).Info("Emitting time-series request to GCP")
-	if err := p.client.CreateTimeSeries(ctx, req); err != nil {
-		return fmt.Errorf("failure sending create time-series request: %w", err)
-	}
-	return nil
-}
-
-// Defines a Closer to finalize a GCP Monitoring client.
-func (p *Pipeline) defaultCloser() error {
-	p.logger.V(2).Info("Closing time-series emitter")
-	if p.client == nil {
-		return nil
-	}
-	if err := p.client.Close(); err != nil {
-		return fmt.Errorf("failure closing metric client: %w", err)
-	}
-	return nil
 }
 
 // Defines the default set of Transformer instances to use in a pipeline based on detected environment.
@@ -296,6 +256,33 @@ func (p *Pipeline) defaultTransformers(_ context.Context) ([]Transformer, error)
 	}
 	transformers = append(transformers, NewDoubleTypedValueTransformer())
 	return transformers, nil
+}
+
+// Set the pipeline Emitter and Closer to use GCP Monitoring client, replacing any existing functions that may be set on
+// the instance.
+func (p *Pipeline) defaultEmitter(ctx context.Context) error {
+	client, err := monitoring.NewMetricClient(ctx)
+	if err != nil {
+		return fmt.Errorf("failure creating new metric client: %w", err)
+	}
+	p.emitter = func(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) error {
+		p.logger.V(2).Info("Emitting time-series request to GCP")
+		if err := client.CreateTimeSeries(ctx, req); err != nil {
+			return fmt.Errorf("failure sending create time-series request: %w", err)
+		}
+		return nil
+	}
+	p.closer = func() error {
+		p.logger.V(2).Info("Closing time-series emitter")
+		if client == nil {
+			return nil
+		}
+		if err := client.Close(); err != nil {
+			return fmt.Errorf("failure closing metric client: %w", err)
+		}
+		return nil
+	}
+	return nil
 }
 
 // Processor returns the Processor implementation associated with the pipeline.
