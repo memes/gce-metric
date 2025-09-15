@@ -17,7 +17,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	google.golang.org/api v0.247.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822
-	google.golang.org/protobuf v1.36.7
+	google.golang.org/protobuf v1.36.9
 )
 
 require (
