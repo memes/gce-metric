@@ -16,3 +16,5 @@ fileignoreconfig:
   checksum: faf4910ac3abe3c0e55e9af57f86040fb2ccde9ac2286cc0e3831c6758f45a38
 - filename: README.md
   checksum: f99873d8506cdba0af1d0045c9241cb20f8b94d4551ee8a8db623241fecf284e
+- filename: pkg/pipeline/transformers.go
+  checksum: fd78a6a96e892b4d53db29a56fc07a957d94273242ecaa87c9ef1e382e9ac813

@@ -10,6 +10,22 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+const (
+	containerNameKey = "container_name"
+	clusterNameKey   = "cluster_name"
+	instanceIDKey    = "instance_id"
+	locationKey      = "location"
+	namespaceIDKey   = "namespace_id"
+	namespaceNameKey = "namespace_name"
+	namespaceKey     = "namespace"
+	nodeIDKey        = "node_id"
+	nodeNameKey      = "node_name"
+	podIDKey         = "pod_id"
+	podNameKey       = "pod_name"
+	projectIDKey     = "project_id"
+	zoneKey          = "zone"
+)
+
 // ErrNilCreateTimeSeriesRequest is returned when a Transformer receives a nil CreateTimeSeriesRequest.
 var ErrNilCreateTimeSeriesRequest = errors.New("transformer received nil as CreateTimeSeriesRequest")
 
@@ -28,10 +44,10 @@ func NewGenericMonitoredResourceTransformer(projectID, location, namespace, node
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "generic_node",
 				Labels: map[string]string{
-					"project_id": projectID,
-					"location":   location,
-					"namespace":  namespace,
-					"node_id":    nodeID,
+					projectIDKey: projectID,
+					locationKey:  location,
+					namespaceKey: namespace,
+					nodeIDKey:    nodeID,
 				},
 			}
 		}
@@ -50,9 +66,9 @@ func NewGCEMonitoredResourceTransformer(projectID, instanceID, zone string) Tran
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "gce_instance",
 				Labels: map[string]string{
-					"project_id":  projectID,
-					"instance_id": instanceID,
-					"zone":        zone,
+					projectIDKey:  projectID,
+					instanceIDKey: instanceID,
+					zoneKey:       zone,
 				},
 			}
 		}
@@ -71,13 +87,13 @@ func NewGKEMonitoredResourceTransformer(projectID, clusterName, namespaceID, ins
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "gke_container",
 				Labels: map[string]string{
-					"project_id":     projectID,
-					"cluster_name":   clusterName,
-					"namespace_id":   namespaceID,
-					"instance_id":    instanceID,
-					"pod_id":         podID,
-					"container_name": containerName,
-					"zone":           zone,
+					projectIDKey:     projectID,
+					clusterNameKey:   clusterName,
+					namespaceIDKey:   namespaceID,
+					instanceIDKey:    instanceID,
+					podIDKey:         podID,
+					containerNameKey: containerName,
+					zoneKey:          zone,
 				},
 			}
 		}
@@ -156,9 +172,9 @@ func NewGenericKubernetesClusterMonitoredResourceTransformer(projectID, location
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "k8s_cluster",
 				Labels: map[string]string{
-					"project_id":   projectID,
-					"location":     location,
-					"cluster_name": clusterName,
+					projectIDKey:   projectID,
+					locationKey:    location,
+					clusterNameKey: clusterName,
 				},
 			}
 		}
@@ -177,12 +193,12 @@ func NewGenericKubernetesContainerMonitoredResourceTransformer(projectID, locati
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "k8s_container",
 				Labels: map[string]string{
-					"project_id":     projectID,
-					"location":       location,
-					"cluster_name":   clusterName,
-					"namespace_name": namespaceID,
-					"pod_name":       podID,
-					"container_name": containerName,
+					projectIDKey:     projectID,
+					locationKey:      location,
+					clusterNameKey:   clusterName,
+					namespaceNameKey: namespaceID,
+					podNameKey:       podID,
+					containerNameKey: containerName,
 				},
 			}
 		}
@@ -201,10 +217,10 @@ func NewGenericKubernetesNodeMonitoredResourceTransformer(projectID, location, c
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "k8s_node",
 				Labels: map[string]string{
-					"project_id":   projectID,
-					"location":     location,
-					"cluster_name": clusterName,
-					"node_name":    nodeName,
+					projectIDKey:   projectID,
+					locationKey:    location,
+					clusterNameKey: clusterName,
+					nodeNameKey:    nodeName,
 				},
 			}
 		}
@@ -223,11 +239,11 @@ func NewGenericKubernetesPodMonitoredResourceTransformer(projectID, location, cl
 			series.Resource = &monitoredrespb.MonitoredResource{
 				Type: "k8s_pod",
 				Labels: map[string]string{
-					"project_id":     projectID,
-					"location":       location,
-					"cluster_name":   clusterName,
-					"namespace_name": namespaceID,
-					"pod_name":       podID,
+					projectIDKey:     projectID,
+					locationKey:      location,
+					clusterNameKey:   clusterName,
+					namespaceNameKey: namespaceID,
+					podNameKey:       podID,
 				},
 			}
 		}
