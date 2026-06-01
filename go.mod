@@ -10,7 +10,7 @@ require (
 	github.com/go-logr/zerologr v1.2.3
 	github.com/google/uuid v1.6.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/rs/zerolog v1.35.0
+	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	google.golang.org/api v0.276.0
