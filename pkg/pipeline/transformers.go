@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	containerNameKey = "container"
+	containerNameKey = "container_name"
 	clusterNameKey   = "cluster_name"
 	instanceIDKey    = "instance_id"
 	locationKey      = "location"
