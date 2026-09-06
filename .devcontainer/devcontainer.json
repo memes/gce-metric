@@ -2,9 +2,6 @@
   "name": "memes-gce-metric",
   "image": "mcr.microsoft.com/devcontainers/go:1.26-trixie",
   "features": {
-    "ghcr.io/memes/devcontainers-features/direnv:1": {
-      "installFromGitHubRelease": true
-    },
     "ghcr.io/memes/devcontainers-features/goreleaser:1": {
       "installFromGitHubRelease": true
     },
