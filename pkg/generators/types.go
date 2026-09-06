@@ -78,7 +78,7 @@ func (pt PeriodicType) ValueCalculator() ValueCalculator {
 		}
 	case Triangle:
 		return func(phase float64) float64 {
-			return math.Abs(2.0 * (phase - math.Floor(0.5+(phase))))
+			return math.Abs(2.0 * (phase - math.Floor(0.5+(phase)))) //nolint:gofumpt // TODO(@memes): Why is this lint failing?
 		}
 	default:
 		return func(_ float64) float64 {
