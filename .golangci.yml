@@ -26,7 +26,7 @@ linters:
     - errorlint
     - errname
     - exhaustive
-    - exhaustruct
+    - exhaustruct_v5
     - forbidigo
     - forcetypeassert
     - funlen
@@ -123,10 +123,11 @@ linters:
     errcheck:
       check-type-assertions: true
       check-blank: true
-    exhaustruct:
-      exclude:
+    exhaustruct_v5:
+      ignore-patterns:
         - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.CreateTimeSeriesRequest$'
         - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.ListTimeSeriesRequest$'
+        - 'cloud\.google\.com/go/monitoring/apiv3/v2/monitoringpb\.TimeSeries$'
         - 'github\.com/spf13/cobra\.Command$'
         - 'github\.com/memes/gce-metric/pkg/generators\.Metric$'
         - 'github\.com/memes/gce-metric/pkg/generators_test\.<anonymous>$'
